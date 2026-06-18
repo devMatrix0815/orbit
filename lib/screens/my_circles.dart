@@ -5,6 +5,14 @@ class MyCircles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Meine Kreise',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.add))],
+      ),
+    );
   }
 }
