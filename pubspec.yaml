@@ -30,6 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  google_sign_in: ^6.2.0        # ← VON ^6.1.0 ZU ^7.2.0
+  firebase_auth: ^6.5.3         # ← VON ^4.10.0 ZU ^6.5.3
+  firebase_core: ^4.11.0        # ← VON ^2.17.0 ZU ^4.11.0
+  cloud_firestore: ^6.6.0       # ← VON ^4.13.0 ZU ^6.6.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
