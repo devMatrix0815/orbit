@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // packages
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Settings;
 
 // screens
 import 'package:orbit/screens/settings.dart';
@@ -13,7 +14,6 @@ class Profile extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final photoUrl = user?.photoURL;
-    final displayName = user?.displayName;
 
     return Scaffold(
       appBar: AppBar(
@@ -58,19 +58,34 @@ class Profile extends StatelessWidget {
                     mainAxisAlignment: .start,
                     crossAxisAlignment: .start,
                     children: [
-                      Text(
-                        displayName ?? '',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-
-                      const SizedBox(height: 2),
-
-                      const Text(
-                        'Test | Test | Test',
-                        style: TextStyle(fontSize: 12),
+                      FutureBuilder<DocumentSnapshot>(
+                        future: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(user?.uid)
+                            .get(),
+                        builder: (context, snapshot) {
+                          final data = snapshot.data?.data() as Map<String, dynamic>?;
+                          final displayName = data?['displayName'] as String? ?? '';
+                          final age = data?['age'];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                displayName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              if (age != null)
+                                Text(
+                                  '$age Jahre',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
