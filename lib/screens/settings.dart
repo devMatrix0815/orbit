@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 
+// packages
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
   @override
   Widget build(BuildContext context) {
+    Future<void> logout() async {
+      await GoogleSignIn().signOut();
+      await FirebaseAuth.instance.signOut();
+    }
+
     return Scaffold(
       body: Padding(
         padding: EdgeInsetsGeometry.all(18.0),
@@ -13,7 +22,7 @@ class Settings extends StatelessWidget {
             Card(
               clipBehavior: Clip.hardEdge,
               child: InkWell(
-                onTap: () {},
+                onTap: logout,
 
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
