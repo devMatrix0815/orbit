@@ -7,9 +7,14 @@ import 'package:google_sign_in/google_sign_in.dart';
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
-  Future<void> logout() async {
-    await GoogleSignIn().signOut();
+  Future<void> logout(BuildContext context) async {
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
     await FirebaseAuth.instance.signOut();
+    if (context.mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   @override
@@ -22,7 +27,7 @@ class Settings extends StatelessWidget {
             Card(
               clipBehavior: Clip.hardEdge,
               child: InkWell(
-                onTap: logout,
+                onTap: () => logout(context),
 
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
