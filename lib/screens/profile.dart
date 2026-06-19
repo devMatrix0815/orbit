@@ -122,6 +122,7 @@ class _ProfileState extends State<Profile> {
                 context,
                 MaterialPageRoute(builder: (context) => Settings()),
               );
+              _loadProfile();
             },
             icon: const Icon(Icons.settings),
           ),
