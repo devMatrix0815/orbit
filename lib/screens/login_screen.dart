@@ -110,12 +110,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'Orbit',
-                style: TextStyle(
-                  fontSize: 67,
-                  fontWeight: FontWeight.bold,
-                ),
+              Image.asset(
+                'assets/icon.png',
+                width: 200,
+                height: 200,
               ),
               const SizedBox(height: 40),
               _isLoading
