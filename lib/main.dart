@@ -7,9 +7,7 @@ import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -30,7 +28,7 @@ class MyApp extends StatelessWidget {
           primary: Colors.black,
           onPrimary: Colors.white,
           onSurface: Color(0xFF1A1A1A),
-          outline: Color(0xFFE0E0E0),
+          outline: Color(0xFF555555),
         ),
       ),
 
@@ -42,7 +40,7 @@ class MyApp extends StatelessWidget {
           primary: Colors.white,
           onPrimary: Colors.black,
           onSurface: Color(0xFFE5E5E5),
-          outline: Color(0xFF2C2C2C),
+          outline: Color(0xFFB8B8B8),
         ),
       ),
 
