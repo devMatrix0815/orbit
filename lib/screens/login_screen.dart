@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/screens/main_screen.dart';
+import 'package:orbit/screens/setup_profile_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -57,26 +58,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
       print('✅ Firebase Auth erfolgreich - User UID: ${user?.uid}');
 
-      // 4. In Firestore speichern
-      if (user != null) {
-        print('🔵 User wird in Firestore gespeichert...');
-        await _firestore.collection('users').doc(user.uid).set({
-          'googleId': user.uid,
-          'email': user.email,
-          'username': user.displayName ?? 'User',
-          'profileImageUrl': user.photoURL,
-          'score': 0,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+      if (user != null && mounted) {
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        final data = doc.data();
+        if (!mounted) return;
 
-        print('✅ User in Firestore gespeichert');
-
-        // Home Screen gehen
-        if (mounted) {
-          print('🔵 Navigiere zu /home');
+        if (data != null && data['profileComplete'] == true) {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const MainScreen()),
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const SetupProfileScreen()),
             (route) => false,
           );
         }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
+import 'screens/setup_profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +54,25 @@ class MyApp extends StatelessWidget {
             );
           }
           if (snapshot.hasData) {
-            return const MainScreen();
+            return FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(snapshot.data!.uid)
+                  .get(),
+              builder: (context, docSnapshot) {
+                if (docSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                final data =
+                    docSnapshot.data?.data() as Map<String, dynamic>?;
+                if (data != null && data['profileComplete'] == true) {
+                  return const MainScreen();
+                }
+                return const SetupProfileScreen();
+              },
+            );
           }
           return const LoginScreen();
         },

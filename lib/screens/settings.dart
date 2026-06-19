@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // packages
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:orbit/screens/login_screen.dart';
 
 class Settings extends StatelessWidget {
   const Settings({super.key});
@@ -13,7 +14,10 @@ class Settings extends StatelessWidget {
     } catch (_) {}
     await FirebaseAuth.instance.signOut();
     if (context.mounted) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
     }
   }
 
