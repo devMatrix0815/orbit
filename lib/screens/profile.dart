@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+// packages
+import 'package:firebase_auth/firebase_auth.dart';
+
+// screens
+import 'package:orbit/screens/settings.dart';
+
 class Profile extends StatelessWidget {
   const Profile({super.key});
 
