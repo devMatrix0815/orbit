@@ -183,8 +183,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
               onPressed: _goToPage2,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
-              child: const Text('Weiter'),
+              child: Text('Weiter', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
             ),
           ),
         ],
