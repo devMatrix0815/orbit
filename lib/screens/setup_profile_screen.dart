@@ -21,9 +21,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
 
-  // ! TEMPRORY!!!
+  // Elements
   final List<String> _allInterests = [
-    'Sport',
+    'Sport & Fitness',
     'Musik',
     'Gaming',
     'Lesen',
@@ -31,11 +31,10 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     'Reisen',
     'Fotografie',
     'Kunst',
-    'Film',
+    'Film & Serien',
     'Technologie',
     'Natur',
     'Mode',
-    'Fitness',
     'Yoga',
     'Tanzen',
     'Wissenschaft',
@@ -43,6 +42,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     'Sprachen',
     'Tiere',
     'DIY',
+    'Finanzen',
+    'Politik',
+    'Philosophie',
+    'Familie',
+    'Ehrenamt',
+    'Ernährung',
   ];
   final Set<String> _selectedInterests = {};
 
@@ -339,11 +344,17 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     label: Text(interest),
                     selected: selected,
 
-                    labelStyle: TextStyle(
-                      color: selected
-                          ? const Color.fromARGB(255, 83, 52, 141)
-                          : Colors.black,
-                    ),
+                    color: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.pressed)) {
+                        return selected
+                            ? const Color(0xFFEEF0FB)
+                            : const Color.fromARGB(255, 238, 238, 238);
+                      }
+                      if (states.contains(WidgetState.selected)) {
+                        return const Color(0xFFEEF0FB);
+                      }
+                      return const Color.fromARGB(255, 238, 238, 238);
+                    }),
 
                     side: selected
                         ? const BorderSide(color: Color(0xFFC5CAE9), width: 1.5)
@@ -375,7 +386,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     child: Text(
-                      'Fertig',
+                      'Profil erstellen',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
