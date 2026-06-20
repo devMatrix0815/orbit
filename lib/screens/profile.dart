@@ -341,6 +341,16 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
                 ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton(
                     onPressed: () async {
+                      if (_selected.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Bitte wähle mindestens ein Interesse.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
                       setState(() => _saving = true);
                       await widget.onSave(_selected);
                       if (context.mounted) Navigator.pop(context);
