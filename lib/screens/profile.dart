@@ -7,7 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Settings;
 // screens
 import 'package:orbit/screens/settings.dart';
 
-const List<String> _allInterests = [  
+// intrest elements
+const List<String> _allInterests = [
   'Sport & Fitness',
   'Musik',
   'Gaming',
@@ -43,11 +44,13 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  // profile stats
   String _displayName = '';
   int? _age;
   List<String> _interests = [];
   bool _loading = true;
 
+  // load profile on init
   @override
   void initState() {
     super.initState();
@@ -55,9 +58,11 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> _loadProfile() async {
+    // get user from firebase
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    // get user data
     final doc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
@@ -66,6 +71,7 @@ class _ProfileState extends State<Profile> {
     final data = doc.data();
     if (data == null) return;
 
+    // set user data
     setState(() {
       _displayName = data['displayName'] as String? ?? '';
       _age = data['age'] as int?;
@@ -75,20 +81,23 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> _saveInterests(List<String> updated) async {
+    // get user from firebase
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .update({'interests': updated});
+    // update interest in firebase
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+      'interests': updated,
+    });
 
+    // reload interests
     setState(() => _interests = updated);
   }
 
   Future<void> _openAddInterests() async {
     final toAdd = Set<String>.from(_interests);
 
+    // modal with interests to add
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -98,7 +107,7 @@ class _ProfileState extends State<Profile> {
       builder: (ctx) => _AddInterestsSheet(
         current: toAdd,
         onSave: (selected) async {
-          await _saveInterests(selected.toList());
+          await _saveInterests(selected.toList()); // save
         },
       ),
     );
@@ -106,6 +115,7 @@ class _ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
+    // user data
     final user = FirebaseAuth.instance.currentUser;
     final photoUrl = user?.photoURL;
 
@@ -115,6 +125,8 @@ class _ProfileState extends State<Profile> {
           'Mein Profil',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+
+        // settings
         actions: [
           IconButton(
             onPressed: () async {
@@ -191,9 +203,18 @@ class _ProfileState extends State<Profile> {
                         ),
                       ),
                       TextButton.icon(
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStatePropertyAll(
+                            Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                         onPressed: _openAddInterests,
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Bearbeiten'),
+                        label: Text(
+                          'Bearbeiten',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -211,7 +232,12 @@ class _ProfileState extends State<Profile> {
                       runSpacing: 8,
                       children: _interests.map((interest) {
                         return Chip(
-                          backgroundColor: const Color.fromARGB(255, 238, 238, 238),
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            238,
+                            238,
+                            238,
+                          ),
                           label: Text(
                             interest,
                             style: const TextStyle(color: Colors.black),
