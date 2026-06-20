@@ -8,6 +8,9 @@ class Circle {
   final int memberCount;
   final DateTime createdAt;
   final String? imageBase64;
+  final List<String> tags;
+  final String description;
+  final String imageUrl;
 
   Circle({
     required this.id,
@@ -17,6 +20,9 @@ class Circle {
     required this.memberCount,
     required this.createdAt,
     this.imageBase64,
+    required this.tags,
+    required this.description,
+    required this.imageUrl,
   });
 
   factory Circle.fromFirestore(DocumentSnapshot doc) {
@@ -29,6 +35,9 @@ class Circle {
       memberCount: data['memberCount'] ?? 0,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       imageBase64: data['imageBase64'] as String?,
+      tags: List<String>.from(data['tags'] ?? []),
+      description: data['description'] ?? '',
+      imageUrl: data['imageUrl'] ?? '',
     );
   }
 }

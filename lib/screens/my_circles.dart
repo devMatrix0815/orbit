@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/circle_model.dart';
+import 'circle_detail_screen.dart';
 
 class MyCircles extends StatefulWidget {
   const MyCircles({super.key});
@@ -12,6 +13,14 @@ class MyCircles extends StatefulWidget {
   @override
   State<MyCircles> createState() => _MyCirclesState();
 }
+
+const List<String> _availableTags = [
+  'Sport & Fitness', 'Musik', 'Gaming', 'Lesen', 'Kochen', 'Reisen',
+  'Fotografie', 'Kunst', 'Film & Serien', 'Technologie', 'Natur', 'Mode',
+  'Yoga', 'Tanzen', 'Wissenschaft', 'Geschichte', 'Sprachen', 'Tiere',
+  'DIY', 'Finanzen', 'Politik', 'Philosophie', 'Familie', 'Ehrenamt',
+  'Ernährung',
+];
 
 class _MyCirclesState extends State<MyCircles> {
   final TextEditingController _searchController = TextEditingController();
@@ -38,6 +47,7 @@ class _MyCirclesState extends State<MyCircles> {
     bool isPicking = false;
     Uint8List? imageBytes;
     String? imageBase64;
+    final Set<String> selectedTags = {};
 
     Future<void> pickImage(StateSetter setSheetState) async {
       if (isPicking) return;
@@ -70,7 +80,9 @@ class _MyCirclesState extends State<MyCircles> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            return Padding(
+            return SizedBox(
+              height: MediaQuery.of(context).size.height * 0.9,
+              child: SingleChildScrollView(
               padding: EdgeInsets.only(
                 left: 24,
                 right: 24,
@@ -173,6 +185,34 @@ class _MyCirclesState extends State<MyCircles> {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 20),
+
+                    // Tag selection
+                    Text(
+                      'Kategorie (mind. 1 auswählen)',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _availableTags.map((tag) {
+                        final isSelected = selectedTags.contains(tag);
+                        return FilterChip(
+                          label: Text(tag),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setSheetState(() {
+                              if (selected) {
+                                selectedTags.add(tag);
+                              } else {
+                                selectedTags.remove(tag);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
                     const SizedBox(height: 24),
 
                     // Save button
@@ -184,6 +224,16 @@ class _MyCirclesState extends State<MyCircles> {
                             ? null
                             : () async {
                                 if (!formKey.currentState!.validate()) return;
+                                if (selectedTags.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Wähle mindestens eine Kategorie.',
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
                                 setSheetState(() => isSaving = true);
 
                                 try {
@@ -197,6 +247,9 @@ class _MyCirclesState extends State<MyCircles> {
                                     'createdAt': FieldValue.serverTimestamp(),
                                     'members': [uid],
                                     'memberCount': 1,
+                                    'tags': selectedTags.toList(),
+                                    'description': '',
+                                    'imageUrl': '',
                                     'imageBase64': ?imageBase64,
                                   };
 
@@ -239,6 +292,7 @@ class _MyCirclesState extends State<MyCircles> {
                   ],
                 ),
               ),
+            ),
             );
           },
         );
@@ -279,10 +333,14 @@ class _MyCirclesState extends State<MyCircles> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: GestureDetector(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${circle.name} – kommt bald!')),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CircleDetailScreen(circle: circle),
+            ),
           );
+          _loadCircles();
         },
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
