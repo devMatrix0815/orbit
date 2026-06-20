@@ -90,6 +90,22 @@ class Settings extends StatelessWidget {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Alle Kreise löschen, bei denen der User der Ersteller ist
+        final ownedCircles = await FirebaseFirestore.instance
+            .collection('circles')
+            .where('createdBy', isEqualTo: user.uid)
+            .get();
+        for (final doc in ownedCircles.docs) {
+          final invites = await FirebaseFirestore.instance
+              .collection('invites')
+              .where('circleId', isEqualTo: doc.id)
+              .get();
+          for (final invite in invites.docs) {
+            await invite.reference.delete();
+          }
+          await doc.reference.delete();
+        }
+
         // Firestore-Daten löschen
         await FirebaseFirestore.instance
             .collection('users')

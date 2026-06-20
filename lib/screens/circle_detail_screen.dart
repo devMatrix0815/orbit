@@ -91,6 +91,14 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     if (confirmed != true) return;
 
     try {
+      final invites = await FirebaseFirestore.instance
+          .collection('invites')
+          .where('circleId', isEqualTo: widget.circle.id)
+          .get();
+      for (final doc in invites.docs) {
+        await doc.reference.delete();
+      }
+
       await FirebaseFirestore.instance
           .collection('circles')
           .doc(widget.circle.id)
