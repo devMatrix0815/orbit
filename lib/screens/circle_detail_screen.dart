@@ -117,6 +117,51 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     );
   }
 
+  Future<void> _leaveGroup() async {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Gruppe verlassen'),
+        content: Text(
+          'Möchtest du "$_circleName" wirklich verlassen?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Verlassen'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('circles')
+          .doc(widget.circle.id)
+          .update({
+        'members': FieldValue.arrayRemove([currentUid]),
+        'memberCount': FieldValue.increment(-1),
+      });
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler beim Verlassen der Gruppe.')),
+        );
+      }
+    }
+  }
+
   void _openInviteScreen() {
     Navigator.push(
       context,
@@ -226,54 +271,77 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                   _showMembersInfo();
                 case 'delete':
                   _showDeleteDialog();
+                case 'leave':
+                  _leaveGroup();
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'rename',
-                child: ListTile(
-                  leading: Icon(Icons.edit_outlined),
-                  title: Text('Namen ändern'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'image',
-                child: ListTile(
-                  leading: Icon(Icons.image_outlined),
-                  title: Text('Bild ändern'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'invites',
-                child: ListTile(
-                  leading: Icon(Icons.person_add_outlined),
-                  title: Text('Einladungen verwalten'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'members',
-                child: ListTile(
-                  leading: Icon(Icons.people_outline),
-                  title: Text('Mitglieder anzeigen'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              if (isCreator)
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: ListTile(
-                    leading: Icon(Icons.delete_outline, color: Colors.red),
-                    title: Text(
-                      'Gruppe löschen',
-                      style: TextStyle(color: Colors.red),
+            itemBuilder: (context) => isCreator
+                ? [
+                    const PopupMenuItem(
+                      value: 'rename',
+                      child: ListTile(
+                        leading: Icon(Icons.edit_outlined),
+                        title: Text('Namen ändern'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-            ],
+                    const PopupMenuItem(
+                      value: 'image',
+                      child: ListTile(
+                        leading: Icon(Icons.image_outlined),
+                        title: Text('Bild ändern'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'invites',
+                      child: ListTile(
+                        leading: Icon(Icons.person_add_outlined),
+                        title: Text('Einladungen verwalten'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'members',
+                      child: ListTile(
+                        leading: Icon(Icons.people_outline),
+                        title: Text('Mitglieder anzeigen'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: ListTile(
+                        leading: Icon(Icons.delete_outline, color: Colors.red),
+                        title: Text(
+                          'Gruppe löschen',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ]
+                : [
+                    const PopupMenuItem(
+                      value: 'members',
+                      child: ListTile(
+                        leading: Icon(Icons.people_outline),
+                        title: Text('Mitglieder anzeigen'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'leave',
+                      child: ListTile(
+                        leading: Icon(Icons.exit_to_app, color: Colors.red),
+                        title: Text(
+                          'Gruppe verlassen',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
           ),
         ],
       ),

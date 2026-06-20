@@ -83,7 +83,7 @@ class _InviteCardState extends State<_InviteCard> {
       final inviteRef = FirebaseFirestore.instance
           .collection('invites')
           .doc(widget.invite.id);
-      batch.update(inviteRef, {'status': 'accepted'});
+      batch.delete(inviteRef);
 
       final circleRef = FirebaseFirestore.instance
           .collection('circles')
@@ -118,7 +118,7 @@ class _InviteCardState extends State<_InviteCard> {
       await FirebaseFirestore.instance
           .collection('invites')
           .doc(widget.invite.id)
-          .update({'status': 'declined'});
+          .delete();
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
