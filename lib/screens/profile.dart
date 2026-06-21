@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 // packages
 import 'package:firebase_auth/firebase_auth.dart';
@@ -49,6 +51,8 @@ class _ProfileState extends State<Profile> {
   int? _age;
   List<String> _interests = [];
   bool _loading = true;
+  String? _profileImageBase64;
+  bool _isPickingImage = false;
 
   // load profile on init
   @override
@@ -76,6 +80,7 @@ class _ProfileState extends State<Profile> {
       _displayName = data['displayName'] as String? ?? '';
       _age = data['age'] as int?;
       _interests = List<String>.from(data['interests'] ?? []);
+      _profileImageBase64 = data['profileImageBase64'] as String?;
       _loading = false;
     });
   }
@@ -92,6 +97,74 @@ class _ProfileState extends State<Profile> {
 
     // reload interests
     setState(() => _interests = updated);
+  }
+
+  Future<void> _pickProfileImage() async {
+    if (_isPickingImage) return;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Kamera'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Galerie'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+    setState(() => _isPickingImage = true);
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 400,
+        maxHeight: 400,
+        imageQuality: 70,
+      );
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      final base64 = base64Encode(bytes);
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'profileImageBase64': base64,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      setState(() => _profileImageBase64 = base64);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler beim Ändern des Profilbildes.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPickingImage = false);
+    }
   }
 
   Future<void> _openAddInterests() async {
@@ -113,12 +186,72 @@ class _ProfileState extends State<Profile> {
     );
   }
 
+  Widget _buildAvatar() {
+    final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
+    Widget image;
+    if (_profileImageBase64 != null && _profileImageBase64!.isNotEmpty) {
+      image = Image.memory(
+        base64Decode(_profileImageBase64!),
+        width: 64,
+        height: 64,
+        fit: BoxFit.cover,
+      );
+    } else if (photoUrl != null) {
+      image = Image.network(
+        photoUrl,
+        width: 64,
+        height: 64,
+        fit: BoxFit.cover,
+      );
+    } else {
+      image = const CircleAvatar(
+        radius: 32,
+        child: Icon(Icons.person, size: 32),
+      );
+    }
+
+    return GestureDetector(
+      onTap: _pickProfileImage,
+      child: SizedBox(
+        width: 64,
+        height: 64,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(1000),
+              child: image,
+            ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(1000),
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.35),
+                child: _isPickingImage
+                    ? const Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Icon(
+                        Icons.camera_alt_outlined,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // user data
-    final user = FirebaseAuth.instance.currentUser;
-    final photoUrl = user?.photoURL;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -152,20 +285,7 @@ class _ProfileState extends State<Profile> {
                     elevation: 0,
                     child: Row(
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(1000),
-                          child: photoUrl != null
-                              ? Image.network(
-                                  photoUrl,
-                                  width: 60,
-                                  height: 60,
-                                  fit: BoxFit.cover,
-                                )
-                              : const CircleAvatar(
-                                  radius: 30,
-                                  child: Icon(Icons.person, size: 30),
-                                ),
-                        ),
+                        _buildAvatar(),
                         const SizedBox(width: 14),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -152,6 +153,20 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     }
   }
 
+  Widget _buildUserAvatar(Map<String, dynamic> user) {
+    final base64 = user['profileImageBase64'] as String?;
+    final url = user['profileImageUrl'] as String?;
+    if (base64 != null && base64.isNotEmpty) {
+      return CircleAvatar(
+        backgroundImage: MemoryImage(base64Decode(base64)),
+      );
+    }
+    if (url != null && url.isNotEmpty) {
+      return CircleAvatar(backgroundImage: NetworkImage(url));
+    }
+    return const CircleAvatar(child: Icon(Icons.person_outline));
+  }
+
   Widget _buildStatusChip(String status) {
     switch (status) {
       case 'accepted':
@@ -256,9 +271,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
               Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.person_outline),
-                  ),
+                  leading: _buildUserAvatar(_foundUser!),
                   title: Text(
                     _foundUser!['displayName'] as String? ?? '',
                     style: const TextStyle(fontWeight: FontWeight.w600),
