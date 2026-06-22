@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/screens/main_screen.dart';
 
+// two step profile setup - step 1: name and age, step 2: interests
 class SetupProfileScreen extends StatefulWidget {
   const SetupProfileScreen({super.key});
 
@@ -13,15 +14,13 @@ class SetupProfileScreen extends StatefulWidget {
 }
 
 class _SetupProfileScreenState extends State<SetupProfileScreen> {
-  // for steps
   final PageController _pageController = PageController();
   bool _isLoading = false;
 
-  // to get input data
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
 
-  // Elements
+  // available interests
   final List<String> _allInterests = [
     'Sport & Fitness',
     'Musik',
@@ -51,7 +50,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   ];
   final Set<String> _selectedInterests = {};
 
-  // clean up controllers
   @override
   void dispose() {
     _pageController.dispose();
@@ -60,8 +58,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     super.dispose();
   }
 
+  // validate step 1 and go to step 2
   void _goToPage2() {
-    // to avoid no name input
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bitte gib deinen Namen ein.')),
@@ -69,7 +67,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       return;
     }
 
-    // to avoid no age input
     final age = int.tryParse(_ageController.text.trim());
     if (age == null || age < 1 || age > 120) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,13 +75,13 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       return;
     }
 
-    // go to second page
     _pageController.nextPage(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
     );
   }
 
+  // save profile to firestore and navigate to main screen
   Future<void> _saveProfile() async {
     if (_selectedInterests.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -144,7 +141,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   }
 
   Widget _buildPage1() {
-    // for photo url
     final user = FirebaseAuth.instance.currentUser;
 
     return Padding(
@@ -156,10 +152,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
           // progress bar
           _buildProgress(1),
 
-          // big space
           const SizedBox(height: 32),
 
-          // title - space - subtitle
+          // title
           Text(
             'Erstelle dein Profil',
             style: Theme.of(
@@ -175,7 +170,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
           ),
 
-          // big spacebv
           const SizedBox(height: 48),
 
           // profile picture
@@ -191,10 +185,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             ),
           ),
 
-          // big space
           const SizedBox(height: 48),
 
-          // name - space - age
+          // name field
           TextField(
             controller: _nameController,
             decoration: InputDecoration(
@@ -225,6 +218,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
           const SizedBox(height: 16),
 
+          // age field
           TextField(
             controller: _ageController,
             decoration: InputDecoration(
@@ -253,10 +247,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             keyboardType: TextInputType.number,
           ),
 
-          // space till bottom
           const Spacer(),
 
-          // next
+          // next button
           SizedBox(
             width: double.infinity,
 
@@ -290,7 +283,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
         children: [
           Row(
             children: [
-              // back to previous step button
+              // back button
               IconButton(
                 onPressed: () => _pageController.previousPage(
                   duration: const Duration(milliseconds: 350),
@@ -300,18 +293,16 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 padding: EdgeInsets.zero,
               ),
 
-              // small space
               const SizedBox(width: 8),
 
-              // progressbar
+              // progress bar
               Expanded(child: _buildProgress(2)),
             ],
           ),
 
-          // big space
           const SizedBox(height: 24),
 
-          // title - space - subtitle
+          // title
           Text(
             'Deine Interessen',
             style: Theme.of(
@@ -328,10 +319,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
           ),
 
-          // big space
           const SizedBox(height: 24),
 
-          // elements to select
+          // interest chips
           Expanded(
             child: SingleChildScrollView(
               child: Wrap(
@@ -378,6 +368,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
           // finish button
           SizedBox(
+
             width: double.infinity,
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -402,13 +393,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   }
 
   Widget _buildProgress(int step) {
-    // color theme presets
     final active = Colors.blue[500];
     final inactive = Colors.blue[100];
 
     return Row(
       children: [
-        // first step
+        // step 1
         Expanded(
           child: Container(
             height: 4,
@@ -419,10 +409,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
           ),
         ),
 
-        // space
         const SizedBox(width: 8),
 
-        // second step
+        // step 2
         Expanded(
           child: Container(
             height: 4,
@@ -433,10 +422,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
           ),
         ),
 
-        // space
         const SizedBox(width: 12),
 
-        // step indicator
+        // step counter
         Text('$step / 2', style: Theme.of(context).textTheme.bodySmall),
       ],
     );

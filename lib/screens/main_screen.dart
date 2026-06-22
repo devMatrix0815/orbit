@@ -9,6 +9,7 @@ import 'discover.dart';
 import 'notifcations.dart';
 import 'profile.dart';
 
+// main screen with bottom navigation
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -26,6 +27,7 @@ class _MainScreenState extends State<MainScreen> {
     _ensureDisplayNameLower();
   }
 
+  // makes sure displayNameLower exists for user search
   Future<void> _ensureDisplayNameLower() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -43,6 +45,7 @@ class _MainScreenState extends State<MainScreen> {
         .update({'displayNameLower': displayName.toLowerCase()});
   }
 
+  // saves fcm token to firestore for push notifications
   Future<void> _saveFcmToken() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -55,6 +58,7 @@ class _MainScreenState extends State<MainScreen> {
           .update({'fcmToken': token});
     }
 
+    // update token when it refreshes
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
       FirebaseFirestore.instance
           .collection('users')
@@ -63,6 +67,7 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  // tab screens
   final _screens = [
     const MyCircles(),
     const Discover(),
@@ -86,6 +91,8 @@ class _MainScreenState extends State<MainScreen> {
       ),
       child: Scaffold(
         body: _screens[_selectedIndex],
+
+        // bottom nav
         bottomNavigationBar: NavigationBar(
           selectedIndex: _selectedIndex,
           indicatorColor: Colors.transparent,

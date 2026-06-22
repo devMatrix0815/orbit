@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/invite_model.dart';
 
+// screen to search and invite users to a circle
 class InviteMembersScreen extends StatefulWidget {
   final String circleId;
   final String circleName;
@@ -41,6 +42,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     super.dispose();
   }
 
+  // load existing invites for this circle
   Future<void> _loadInvites() async {
     setState(() => _isLoading = true);
     final snapshot = await FirebaseFirestore.instance
@@ -59,6 +61,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     });
   }
 
+  // search user by exact display name (case insensitive)
   Future<void> _searchUser() async {
     final input = _nameController.text.trim();
     if (input.isEmpty) return;
@@ -90,13 +93,14 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     }
   }
 
+  // send invite with duplicate and membership checks
   Future<void> _sendInvite() async {
     if (_foundUser == null) return;
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final targetUid = _foundUser!['uid'] as String;
     final targetDisplayName = _foundUser!['displayName'] as String? ?? '';
 
-    // Security checks
+    // can't invite yourself
     if (targetUid == currentUid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Du kannst dich nicht selbst einladen.')),
@@ -104,6 +108,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
       return;
     }
 
+    // already a member
     if (widget.members.contains(targetUid)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('"$targetDisplayName" ist bereits Mitglied.')),
@@ -111,6 +116,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
       return;
     }
 
+    // already invited
     final alreadyInvited = _invites.any(
       (inv) => inv.invitedUserId == targetUid && inv.status == 'pending',
     );
@@ -153,6 +159,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     }
   }
 
+  // user avatar - base64, url or placeholder
   Widget _buildUserAvatar(Map<String, dynamic> user) {
     final base64 = user['profileImageBase64'] as String?;
     final url = user['profileImageUrl'] as String?;
@@ -167,6 +174,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     return const CircleAvatar(child: Icon(Icons.person_outline));
   }
 
+  // colored status chip for pending / accepted / declined
   Widget _buildStatusChip(String status) {
     switch (status) {
       case 'accepted':
@@ -205,7 +213,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search row
+            // search row
             Row(
               children: [
                 Expanded(
@@ -255,7 +263,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
 
             const SizedBox(height: 12),
 
-            // Search result
+            // search result
             if (_searchError != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -293,6 +301,8 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
               ),
 
             const SizedBox(height: 8),
+
+            // invited users list
             Text(
               'Eingeladene Personen',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(

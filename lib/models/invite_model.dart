@@ -1,14 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// invite data model for joining a circle
 class CircleInvite {
   final String id;
   final String circleId;
   final String circleName;
   final String invitedUserId;
   final String invitedDisplayName;
-  final String invitedBy;
+  final String invitedBy; // uid of the user who sent the invite
   final DateTime invitedAt;
-  final String status;
+  final String status; // pending, accepted or declined
 
   CircleInvite({
     required this.id,
@@ -21,6 +22,7 @@ class CircleInvite {
     required this.status,
   });
 
+  // create invite from firestore document
   factory CircleInvite.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return CircleInvite(

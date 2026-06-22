@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// packages
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/screens/login_screen.dart';
 
+// settings screen - edit profile, sign out, delete account
 class Settings extends StatelessWidget {
   const Settings({super.key});
 
+  // load current profile data and show edit sheet
   Future<void> _editProfile(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -47,6 +48,7 @@ class Settings extends StatelessWidget {
     );
   }
 
+  // sign out google and firebase then go to login
   Future<void> logout(BuildContext context) async {
     try {
       await GoogleSignIn().signOut();
@@ -60,6 +62,7 @@ class Settings extends StatelessWidget {
     }
   }
 
+  // delete account - removes owned circles, invites, firestore data and auth account
   Future<void> deleteAccount(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -90,7 +93,7 @@ class Settings extends StatelessWidget {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Alle Kreise löschen, bei denen der User der Ersteller ist
+        // delete owned circles and their invites
         final ownedCircles = await FirebaseFirestore.instance
             .collection('circles')
             .where('createdBy', isEqualTo: user.uid)
@@ -106,17 +109,17 @@ class Settings extends StatelessWidget {
           await doc.reference.delete();
         }
 
-        // Firestore-Daten löschen
+        // delete firestore user document
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .delete();
 
-        // Firebase Auth Account löschen
+        // delete firebase auth account
         await user.delete();
       }
 
-      // Google Sign-Out
+      // google sign out
       try {
         await GoogleSignIn().signOut();
       } catch (_) {}
@@ -129,7 +132,8 @@ class Settings extends StatelessWidget {
       }
     } on FirebaseAuthException catch (e) {
       if (!context.mounted) return;
-      // Falls Re-Authentifizierung nötig ist
+
+      // re-authentication required
       if (e.code == 'requires-recent-login') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -153,6 +157,7 @@ class Settings extends StatelessWidget {
         padding: EdgeInsetsGeometry.all(18.0),
         child: ListView(
           children: [
+            // edit profile
             Card(
               clipBehavior: Clip.hardEdge,
               child: InkWell(
@@ -189,6 +194,7 @@ class Settings extends StatelessWidget {
 
             const SizedBox(height: 8),
 
+            // sign out
             Card(
               clipBehavior: Clip.hardEdge,
               child: InkWell(
@@ -200,7 +206,6 @@ class Settings extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      // Text
                       Expanded(
                         child: Row(
                           children: [
@@ -214,8 +219,6 @@ class Settings extends StatelessWidget {
                           ],
                         ),
                       ),
-
-                      // > icon
                       Icon(
                         Icons.chevron_right,
                         color: Theme.of(context).colorScheme.onSurface,
@@ -228,6 +231,7 @@ class Settings extends StatelessWidget {
 
             const SizedBox(height: 8),
 
+            // delete account
             Card(
               clipBehavior: Clip.hardEdge,
               child: InkWell(
@@ -273,6 +277,7 @@ class Settings extends StatelessWidget {
   }
 }
 
+// bottom sheet to edit name and age
 class _EditProfileSheet extends StatefulWidget {
   final TextEditingController nameController;
   final TextEditingController ageController;
@@ -313,6 +318,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
             ),
             const SizedBox(height: 20),
 
+            // name field
             TextFormField(
               controller: widget.nameController,
               decoration: const InputDecoration(
@@ -325,6 +331,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
             const SizedBox(height: 16),
 
+            // age field
             TextFormField(
               controller: widget.ageController,
               decoration: const InputDecoration(
@@ -343,6 +350,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
             const SizedBox(height: 24),
 
+            // save button
             SizedBox(
               width: double.infinity,
               child: _saving

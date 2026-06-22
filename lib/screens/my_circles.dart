@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models/circle_model.dart';
 import 'circle_detail_screen.dart';
 
+// my circles tab - lists all circles the user is part of
 class MyCircles extends StatefulWidget {
   const MyCircles({super.key});
 
@@ -40,6 +41,7 @@ class _MyCirclesState extends State<MyCircles> {
     super.dispose();
   }
 
+  // bottom sheet to create a new circle
   Future<void> _showCreateCircleSheet() async {
     final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -337,6 +339,7 @@ class _MyCirclesState extends State<MyCircles> {
     );
   }
 
+  // loads all circles from firestore where user is a member
   Future<void> _loadCircles() async {
     setState(() {
       _isLoading = true;
@@ -362,6 +365,7 @@ class _MyCirclesState extends State<MyCircles> {
     }
   }
 
+  // circle card with image, name and member count
   Widget _buildCircleCard(Circle circle) {
     final Uint8List? imageBytes = circle.imageBase64 != null
         ? base64Decode(circle.imageBase64!)
@@ -533,7 +537,7 @@ class _MyCirclesState extends State<MyCircles> {
               padding: const WidgetStatePropertyAll(
                 EdgeInsets.symmetric(horizontal: 16.0),
               ),
-              onChanged: null, // SPÄTER: Suchfunktion
+              onChanged: null, // TODO: search function
               leading: Icon(
                 Icons.search,
                 color: Theme.of(context).colorScheme.outline,

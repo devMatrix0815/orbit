@@ -6,6 +6,7 @@ import '../models/circle_model.dart';
 import 'invite_members_screen.dart';
 import 'circle_settings_screen.dart';
 
+// circle detail screen with options menu
 class CircleDetailScreen extends StatefulWidget {
   final Circle circle;
 
@@ -24,6 +25,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     _circleName = widget.circle.name;
   }
 
+  // leave group with confirmation dialog
   Future<void> _leaveGroup() async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     if (currentUid == null) return;
@@ -67,6 +69,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     }
   }
 
+  // open invite members screen
   void _openInviteScreen() {
     Navigator.push(
       context,
@@ -80,6 +83,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     );
   }
 
+  // open circle settings and handle return values
   Future<void> _openSettingsScreen() async {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
@@ -98,11 +102,12 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     }
   }
 
+  // show members bottom sheet
   Future<void> _showMembersSheet() async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final isCreator = currentUid == widget.circle.createdBy;
 
-    // Fresh member list from Firestore
+    // fresh member list from firestore
     final doc = await FirebaseFirestore.instance
         .collection('circles')
         .doc(widget.circle.id)
@@ -134,6 +139,8 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_circleName),
+
+        // options menu - different for creator vs member
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -205,8 +212,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
   }
 }
 
-// ── Members bottom sheet ──────────────────────────────────────────────────────
-
+// members bottom sheet
 class _MembersSheet extends StatefulWidget {
   final String circleId;
   final String creatorUid;
@@ -239,6 +245,7 @@ class _MembersSheetState extends State<_MembersSheet> {
     _loadMembers();
   }
 
+  // load member profiles from firestore
   Future<void> _loadMembers() async {
     if (widget.memberUids.isEmpty) {
       setState(() => _isLoading = false);
@@ -255,6 +262,7 @@ class _MembersSheetState extends State<_MembersSheet> {
         final data = doc.data() ?? {};
         return {'uid': doc.id, ...data};
       }).toList();
+
       // creator first, then alphabetical
       _members.sort((a, b) {
         if (a['uid'] == widget.creatorUid) return -1;
@@ -269,6 +277,7 @@ class _MembersSheetState extends State<_MembersSheet> {
   bool _isSelectable(String uid) =>
       uid != widget.currentUid && uid != widget.creatorUid;
 
+  // remove selected members from circle
   Future<void> _removeSelected() async {
     setState(() => _isRemoving = true);
     try {
@@ -298,6 +307,7 @@ class _MembersSheetState extends State<_MembersSheet> {
     }
   }
 
+  // avatar with selection overlay when in selection mode
   Widget _buildAvatar(Map<String, dynamic> member, bool isSelected, bool selectable) {
     final base64Str = member['profileImageBase64'] as String?;
     final url = member['profileImageUrl'] as String?;
@@ -339,7 +349,7 @@ class _MembersSheetState extends State<_MembersSheet> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Drag handle
+        // drag handle
         const SizedBox(height: 8),
         Container(
           width: 36,
@@ -351,7 +361,7 @@ class _MembersSheetState extends State<_MembersSheet> {
         ),
         const SizedBox(height: 16),
 
-        // Header
+        // header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -385,7 +395,7 @@ class _MembersSheetState extends State<_MembersSheet> {
         ),
         const SizedBox(height: 8),
 
-        // List
+        // member list
         if (_isLoading)
           const Padding(
             padding: EdgeInsets.all(32),
@@ -449,7 +459,7 @@ class _MembersSheetState extends State<_MembersSheet> {
             ),
           ),
 
-        // Remove button
+        // remove button
         if (_selectionMode && widget.isCreator && _selected.isNotEmpty)
           Padding(
             padding: EdgeInsets.fromLTRB(

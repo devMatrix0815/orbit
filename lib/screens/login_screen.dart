@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/screens/main_screen.dart';
 import 'package:orbit/screens/setup_profile_screen.dart';
 
+// login screen with google sign-in
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -16,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
   );
-  
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -29,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // 1. Google Sign-In
       print('🔵 Google Sign-In wird gestartet...');
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         print('⚠️ User hat Sign-In abgebrochen');
         setState(() => _isLoading = false);
@@ -38,27 +39,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
       print('✅ Google Sign-In erfolgreich: ${googleUser.email}');
 
-      // 2. Get authentication details
+      // 2. get authentication details
       print('🔵 Authentifizierung wird geholt...');
-      final GoogleSignInAuthentication googleAuth = 
+      final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-      
+
       print('✅ Auth Details geholt - accessToken: ${googleAuth.accessToken?.substring(0, 20)}...');
 
-      // 3. Firebase Auth
+      // 3. firebase auth
       print('🔵 Firebase Auth wird gestartet...');
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      
-      final UserCredential userCredential = 
+
+      final UserCredential userCredential =
           await _auth.signInWithCredential(credential);
       final User? user = userCredential.user;
 
       print('✅ Firebase Auth erfolgreich - User UID: ${user?.uid}');
 
       if (user != null && mounted) {
+        // check if profile is complete
         final doc = await _firestore.collection('users').doc(user.uid).get();
         final data = doc.data();
         if (!mounted) return;
@@ -78,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on Exception catch (e) {
       print('❌ Fehler: $e');
       print('Fehlertyp: ${e.runtimeType}');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -104,12 +106,15 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // app logo
               Image.asset(
                 'assets/icon.png',
                 width: 200,
                 height: 200,
               ),
               const SizedBox(height: 40),
+
+              // loading or sign in button
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton.icon(

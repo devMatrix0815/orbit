@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/invite_model.dart';
 
+// notifications screen - shows pending circle invites
 class Notifcations extends StatelessWidget {
   const Notifcations({super.key});
 
@@ -17,12 +18,15 @@ class Notifcations extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
+
+      // realtime stream of all invites for this user
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('invites')
             .where('invitedUserId', isEqualTo: uid)
             .snapshots(),
         builder: (context, snapshot) {
+          // loading
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -33,11 +37,13 @@ class Notifcations extends StatelessWidget {
             );
           }
 
+          // only show pending invites
           final pending = (snapshot.data?.docs ?? [])
               .map((doc) => CircleInvite.fromFirestore(doc))
               .where((inv) => inv.status == 'pending')
               .toList();
 
+          // empty state
           if (pending.isEmpty) {
             return Center(
               child: Text(
@@ -50,6 +56,7 @@ class Notifcations extends StatelessWidget {
             );
           }
 
+          // invite list
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: pending.length,
@@ -63,6 +70,7 @@ class Notifcations extends StatelessWidget {
   }
 }
 
+// single invite card with accept and decline buttons
 class _InviteCard extends StatefulWidget {
   final CircleInvite invite;
   const _InviteCard({required this.invite});
@@ -74,6 +82,7 @@ class _InviteCard extends StatefulWidget {
 class _InviteCardState extends State<_InviteCard> {
   bool _isLoading = false;
 
+  // accept invite - deletes invite and adds user to circle
   Future<void> _accept() async {
     setState(() => _isLoading = true);
     try {
@@ -112,6 +121,7 @@ class _InviteCardState extends State<_InviteCard> {
     }
   }
 
+  // decline invite - only deletes the invite document
   Future<void> _decline() async {
     setState(() => _isLoading = true);
     try {
@@ -137,6 +147,7 @@ class _InviteCardState extends State<_InviteCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // invite info
             Row(
               children: [
                 const CircleAvatar(
@@ -169,6 +180,8 @@ class _InviteCardState extends State<_InviteCard> {
               ],
             ),
             const SizedBox(height: 14),
+
+            // action buttons
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
             else

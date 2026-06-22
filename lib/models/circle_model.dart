@@ -1,13 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// circle data model
 class Circle {
   final String id;
   final String name;
-  final String createdBy;
-  final List<String> members;
+  final String createdBy; // uid of the creator
+  final List<String> members; // uids of all members
   final int memberCount;
   final DateTime createdAt;
-  final String? imageBase64;
+  final String? imageBase64; // group image stored as base64
   final List<String> tags;
   final String description;
   final String imageUrl;
@@ -25,6 +26,7 @@ class Circle {
     required this.imageUrl,
   });
 
+  // create circle from firestore document
   factory Circle.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Circle(

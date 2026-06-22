@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/circle_model.dart';
 
+// circle settings screen - change image, rename, delete
 class CircleSettingsScreen extends StatefulWidget {
   final Circle circle;
   final String initialName;
@@ -28,11 +29,14 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
   void initState() {
     super.initState();
     _name = widget.initialName;
+
+    // decode existing image if available
     if (widget.circle.imageBase64 != null) {
       _imageBytes = base64Decode(widget.circle.imageBase64!);
     }
   }
 
+  // rename circle with a dialog
   Future<void> _showRenameDialog() async {
     final controller = TextEditingController(text: _name);
     final newName = await showDialog<String>(
@@ -75,6 +79,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     }
   }
 
+  // pick new group image from camera or gallery
   Future<void> _pickImage() async {
     if (_isPickingImage) return;
 
@@ -141,6 +146,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     }
   }
 
+  // delete circle and all its invites
   Future<void> _deleteGroup() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -166,6 +172,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     if (confirmed != true) return;
 
     try {
+      // delete all invites first
       final invites = await FirebaseFirestore.instance
           .collection('invites')
           .where('circleId', isEqualTo: widget.circle.id)
@@ -173,6 +180,8 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
       for (final doc in invites.docs) {
         await doc.reference.delete();
       }
+
+      // delete the circle
       await FirebaseFirestore.instance
           .collection('circles')
           .doc(widget.circle.id)
@@ -188,6 +197,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     }
   }
 
+  // return updated name when navigating back
   void _popWithResult() {
     Navigator.pop(context, {'name': _name});
   }
@@ -209,7 +219,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
         ),
         body: ListView(
           children: [
-            // Image preview / picker
+            // image preview / picker
             GestureDetector(
               onTap: _pickImage,
               child: SizedBox(
@@ -259,6 +269,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
 
             const SizedBox(height: 8),
 
+            // rename
             ListTile(
               leading: const Icon(Icons.edit_outlined),
               title: const Text('Namen ändern'),
@@ -269,6 +280,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
 
             const Divider(),
 
+            // delete
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
               title: const Text(

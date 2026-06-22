@@ -2,14 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-// packages
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Settings;
-
-// screens
 import 'package:orbit/screens/settings.dart';
 
-// intrest elements
+// available interests
 const List<String> _allInterests = [
   'Sport & Fitness',
   'Musik',
@@ -38,6 +35,7 @@ const List<String> _allInterests = [
   'Ernährung',
 ];
 
+// profile tab - shows name, avatar and interests
 class Profile extends StatefulWidget {
   const Profile({super.key});
 
@@ -46,7 +44,6 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-  // profile stats
   String _displayName = '';
   int? _age;
   List<String> _interests = [];
@@ -54,19 +51,17 @@ class _ProfileState extends State<Profile> {
   String? _profileImageBase64;
   bool _isPickingImage = false;
 
-  // load profile on init
   @override
   void initState() {
     super.initState();
     _loadProfile();
   }
 
+  // load profile data from firestore
   Future<void> _loadProfile() async {
-    // get user from firebase
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // get user data
     final doc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
@@ -75,7 +70,6 @@ class _ProfileState extends State<Profile> {
     final data = doc.data();
     if (data == null) return;
 
-    // set user data
     setState(() {
       _displayName = data['displayName'] as String? ?? '';
       _age = data['age'] as int?;
@@ -85,20 +79,19 @@ class _ProfileState extends State<Profile> {
     });
   }
 
+  // save updated interests to firestore
   Future<void> _saveInterests(List<String> updated) async {
-    // get user from firebase
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    // update interest in firebase
     await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
       'interests': updated,
     });
 
-    // reload interests
     setState(() => _interests = updated);
   }
 
+  // pick profile image from camera or gallery and save to firestore
   Future<void> _pickProfileImage() async {
     if (_isPickingImage) return;
 
@@ -167,10 +160,10 @@ class _ProfileState extends State<Profile> {
     }
   }
 
+  // open interests edit sheet
   Future<void> _openAddInterests() async {
     final toAdd = Set<String>.from(_interests);
 
-    // modal with interests to add
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -186,6 +179,7 @@ class _ProfileState extends State<Profile> {
     );
   }
 
+  // avatar with camera overlay - shows base64, google photo or placeholder
   Widget _buildAvatar() {
     final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
     Widget image;
@@ -259,7 +253,7 @@ class _ProfileState extends State<Profile> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
 
-        // settings
+        // settings button
         actions: [
           IconButton(
             onPressed: () async {
@@ -373,6 +367,7 @@ class _ProfileState extends State<Profile> {
   }
 }
 
+// bottom sheet to edit interests
 class _AddInterestsSheet extends StatefulWidget {
   final Set<String> current;
   final Future<void> Function(Set<String>) onSave;

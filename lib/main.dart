@@ -11,7 +11,7 @@ import 'screens/setup_profile_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
-  // System zeigt die Notification automatisch an
+  // system handles the notification automatically
 }
 
 void main() async {
