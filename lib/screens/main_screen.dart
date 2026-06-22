@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,12 +20,34 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  int _notificationCount = 0;
+  StreamSubscription? _notifSub;
 
   @override
   void initState() {
     super.initState();
     _saveFcmToken();
     _ensureDisplayNameLower();
+    _listenNotifications();
+  }
+
+  void _listenNotifications() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    _notifSub = FirebaseFirestore.instance
+        .collection('invites')
+        .where('invitedUserId', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .listen((snap) {
+      if (mounted) setState(() => _notificationCount = snap.docs.length);
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifSub?.cancel();
+    super.dispose();
   }
 
   // makes sure displayNameLower exists for user search
@@ -98,23 +121,31 @@ class _MainScreenState extends State<MainScreen> {
           indicatorColor: Colors.transparent,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
           onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-          destinations: const [
-            NavigationDestination(
+          destinations: [
+            const NavigationDestination(
               icon: Icon(Icons.circle_outlined),
               selectedIcon: Icon(Icons.circle),
               label: '',
             ),
-            NavigationDestination(
+            const NavigationDestination(
               icon: Icon(Icons.explore_outlined),
               selectedIcon: Icon(Icons.explore),
               label: '',
             ),
             NavigationDestination(
-              icon: Icon(Icons.notifications_outlined),
-              selectedIcon: Icon(Icons.notifications_rounded),
+              icon: Badge(
+                label: Text('$_notificationCount'),
+                isLabelVisible: _notificationCount > 0,
+                child: const Icon(Icons.notifications_outlined),
+              ),
+              selectedIcon: Badge(
+                label: Text('$_notificationCount'),
+                isLabelVisible: _notificationCount > 0,
+                child: const Icon(Icons.notifications_rounded),
+              ),
               label: '',
             ),
-            NavigationDestination(
+            const NavigationDestination(
               icon: Icon(Icons.person_outline),
               selectedIcon: Icon(Icons.person),
               label: '',
