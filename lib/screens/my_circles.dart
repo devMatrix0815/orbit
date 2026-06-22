@@ -99,6 +99,7 @@ class _MyCirclesState extends State<MyCircles> {
   Set<String> _pinnedIds = {};
   bool _isLoading = true;
   String? _error;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -691,8 +692,10 @@ class _MyCirclesState extends State<MyCircles> {
     final pinnedCircles = _circles
         .where((c) => _pinnedIds.contains(c.id))
         .toList();
+    final query = _searchQuery.toLowerCase().trim();
     final unpinnedCircles = _circles
         .where((c) => !_pinnedIds.contains(c.id))
+        .where((c) => query.isEmpty || c.name.toLowerCase().contains(query))
         .toList();
 
     return RefreshIndicator(
@@ -715,6 +718,17 @@ class _MyCirclesState extends State<MyCircles> {
               child: Center(
                 child: Text(
                   'Du bist noch in keinem Kreis.\nEntdecke neue Gruppen!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ),
+            )
+          else if (unpinnedCircles.isEmpty && _searchQuery.trim().isNotEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 40.0),
+              child: Center(
+                child: Text(
+                  'Keine Kreise gefunden.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
@@ -771,7 +785,7 @@ class _MyCirclesState extends State<MyCircles> {
               padding: const WidgetStatePropertyAll(
                 EdgeInsets.symmetric(horizontal: 16.0),
               ),
-              onChanged: null, // TODO: search function
+              onChanged: (value) => setState(() => _searchQuery = value),
               leading: Icon(
                 Icons.search,
                 color: Theme.of(context).colorScheme.outline,
