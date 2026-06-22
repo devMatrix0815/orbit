@@ -78,6 +78,8 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
         builder: (context) => InviteMembersScreen(
           circleId: widget.circle.id,
           circleName: _circleName,
+          circleImageBase64: widget.circle.imageBase64,
+          circleImageUrl: widget.circle.imageUrl.isNotEmpty ? widget.circle.imageUrl : null,
           members: widget.circle.members,
         ),
       ),

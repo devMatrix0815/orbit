@@ -8,12 +8,16 @@ import '../models/invite_model.dart';
 class InviteMembersScreen extends StatefulWidget {
   final String circleId;
   final String circleName;
+  final String? circleImageBase64;
+  final String? circleImageUrl;
   final List<String> members;
 
   const InviteMembersScreen({
     super.key,
     required this.circleId,
     required this.circleName,
+    this.circleImageBase64,
+    this.circleImageUrl,
     required this.members,
   });
 
@@ -137,6 +141,8 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
         'status': 'pending',
         'circleId': widget.circleId,
         'circleName': widget.circleName,
+        if (widget.circleImageBase64 != null) 'circleImageBase64': widget.circleImageBase64,
+        if (widget.circleImageUrl != null) 'circleImageUrl': widget.circleImageUrl,
       });
 
       _nameController.clear();

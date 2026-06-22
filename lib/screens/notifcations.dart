@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -82,6 +83,21 @@ class _InviteCard extends StatefulWidget {
 class _InviteCardState extends State<_InviteCard> {
   bool _isLoading = false;
 
+  Widget _buildCircleAvatar(CircleInvite invite) {
+    if (invite.circleImageBase64 != null && invite.circleImageBase64!.isNotEmpty) {
+      return CircleAvatar(
+        backgroundImage: MemoryImage(base64Decode(invite.circleImageBase64!)),
+      );
+    }
+    if (invite.circleImageUrl != null && invite.circleImageUrl!.isNotEmpty) {
+      return CircleAvatar(backgroundImage: NetworkImage(invite.circleImageUrl!));
+    }
+    return const CircleAvatar(
+      backgroundColor: Color(0xFFFF9966),
+      child: Icon(Icons.group, color: Colors.white),
+    );
+  }
+
   // accept invite - deletes invite and adds user to circle
   Future<void> _accept() async {
     setState(() => _isLoading = true);
@@ -150,10 +166,7 @@ class _InviteCardState extends State<_InviteCard> {
             // invite info
             Row(
               children: [
-                const CircleAvatar(
-                  backgroundColor: Color(0xFFFF9966),
-                  child: Icon(Icons.group, color: Colors.white),
-                ),
+                _buildCircleAvatar(widget.invite),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

@@ -5,6 +5,8 @@ class CircleInvite {
   final String id;
   final String circleId;
   final String circleName;
+  final String? circleImageBase64;
+  final String? circleImageUrl;
   final String invitedUserId;
   final String invitedDisplayName;
   final String invitedBy; // uid of the user who sent the invite
@@ -15,6 +17,8 @@ class CircleInvite {
     required this.id,
     required this.circleId,
     required this.circleName,
+    this.circleImageBase64,
+    this.circleImageUrl,
     required this.invitedUserId,
     required this.invitedDisplayName,
     required this.invitedBy,
@@ -29,6 +33,8 @@ class CircleInvite {
       id: doc.id,
       circleId: data['circleId'] ?? '',
       circleName: data['circleName'] ?? '',
+      circleImageBase64: data['circleImageBase64'] as String?,
+      circleImageUrl: data['circleImageUrl'] as String?,
       invitedUserId: data['invitedUserId'] ?? '',
       invitedDisplayName: data['invitedDisplayName'] ?? '',
       invitedBy: data['invitedBy'] ?? '',
