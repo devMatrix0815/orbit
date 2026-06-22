@@ -15,6 +15,76 @@ class MyCircles extends StatefulWidget {
   State<MyCircles> createState() => _MyCirclesState();
 }
 
+// circular avatar for pinned/top circles
+class _TopCircleAvatar extends StatelessWidget {
+  final Circle circle;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _TopCircleAvatar({
+    required this.circle,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final imageBytes = circle.imageBase64 != null
+        ? base64Decode(circle.imageBase64!)
+        : null;
+
+    return GestureDetector(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: SizedBox(
+        width: 72,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFFC5CAE9),
+                  width: 2.5,
+                ),
+              ),
+              child: ClipOval(
+                child: imageBytes != null
+                    ? Image.memory(imageBytes, fit: BoxFit.cover)
+                    : Container(
+                        color: const Color(0xFFFF9966),
+                        alignment: Alignment.center,
+                        child: Text(
+                          circle.name.isNotEmpty
+                              ? circle.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              circle.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 const List<String> _availableTags = [
   'Sport & Fitness', 'Musik', 'Gaming', 'Lesen', 'Kochen', 'Reisen',
   'Fotografie', 'Kunst', 'Film & Serien', 'Technologie', 'Natur', 'Mode',
@@ -26,6 +96,7 @@ const List<String> _availableTags = [
 class _MyCirclesState extends State<MyCircles> {
   final TextEditingController _searchController = TextEditingController();
   List<Circle> _circles = [];
+  Set<String> _pinnedIds = {};
   bool _isLoading = true;
   String? _error;
 
@@ -339,7 +410,7 @@ class _MyCirclesState extends State<MyCircles> {
     );
   }
 
-  // loads all circles from firestore where user is a member
+  // loads all circles from firestore where user is a member + pinned ids
   Future<void> _loadCircles() async {
     setState(() {
       _isLoading = true;
@@ -348,13 +419,27 @@ class _MyCirclesState extends State<MyCircles> {
 
     try {
       final currentUid = FirebaseAuth.instance.currentUser!.uid;
-      final snapshot = await FirebaseFirestore.instance
+      final circlesFuture = FirebaseFirestore.instance
           .collection('circles')
           .where('members', arrayContains: currentUid)
           .get();
+      final userFuture = FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUid)
+          .get();
+
+      final results = await Future.wait([circlesFuture, userFuture]);
+      final circleSnap = results[0] as QuerySnapshot;
+      final userDoc = results[1] as DocumentSnapshot;
+
+      final userData = userDoc.data() as Map<String, dynamic>?;
+      final pinned = Set<String>.from(
+        (userData?['pinnedCircles'] as List<dynamic>?) ?? [],
+      );
 
       setState(() {
-        _circles = snapshot.docs.map(Circle.fromFirestore).toList();
+        _circles = circleSnap.docs.map(Circle.fromFirestore).toList();
+        _pinnedIds = pinned;
         _isLoading = false;
       });
     } catch (e) {
@@ -365,15 +450,73 @@ class _MyCirclesState extends State<MyCircles> {
     }
   }
 
+  Future<void> _togglePin(String circleId) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final isPinned = _pinnedIds.contains(circleId);
+
+    setState(() {
+      if (isPinned) {
+        _pinnedIds.remove(circleId);
+      } else {
+        _pinnedIds.add(circleId);
+      }
+    });
+
+    await FirebaseFirestore.instance.collection('users').doc(uid).set(
+      {'pinnedCircles': _pinnedIds.toList()},
+      SetOptions(merge: true),
+    );
+  }
+
   // circle card with image, name and member count
   Widget _buildCircleCard(Circle circle) {
     final Uint8List? imageBytes = circle.imageBase64 != null
         ? base64Decode(circle.imageBase64!)
         : null;
+    final isPinned = _pinnedIds.contains(circle.id);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: GestureDetector(
+        onLongPress: () {
+          showModalBottomSheet(
+            context: context,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (_) => SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ListTile(
+                    leading: Icon(
+                      isPinned ? Icons.star : Icons.star_outline,
+                      color: const Color(0xFFFF9966),
+                    ),
+                    title: Text(
+                      isPinned ? 'Von Top-Kreise entfernen' : 'Zu Top-Kreise hinzufügen',
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _togglePin(circle.id);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          );
+        },
         onTap: () async {
           await Navigator.push(
             context,
@@ -434,11 +577,93 @@ class _MyCirclesState extends State<MyCircles> {
                   ),
                 ),
 
+                // pin indicator
+                if (isPinned)
+                  const Positioned(
+                    top: 10,
+                    right: 12,
+                    child: Icon(Icons.star, color: Colors.black, size: 20),
+                  ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTopCirclesRow(List<Circle> pinned) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10.0),
+          child: Text(
+            'Top-Kreise',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: 90,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: pinned.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, i) => _TopCircleAvatar(
+              circle: pinned[i],
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CircleDetailScreen(circle: pinned[i]),
+                  ),
+                );
+                _loadCircles();
+              },
+              onLongPress: () {
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (_) => SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 8),
+                        Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ListTile(
+                          leading: const Icon(Icons.star_outline),
+                          title: const Text('Von Top-Kreise entfernen'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _togglePin(pinned[i].id);
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'Alle Kreise',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+      ],
     );
   }
 
@@ -463,18 +688,27 @@ class _MyCirclesState extends State<MyCircles> {
       );
     }
 
+    final pinnedCircles = _circles
+        .where((c) => _pinnedIds.contains(c.id))
+        .toList();
+    final unpinnedCircles = _circles
+        .where((c) => !_pinnedIds.contains(c.id))
+        .toList();
+
     return RefreshIndicator(
       onRefresh: _loadCircles,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 16.0),
-            child: Text(
-              'Deine Kreise',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          if (pinnedCircles.isNotEmpty) _buildTopCirclesRow(pinnedCircles),
+          if (pinnedCircles.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 16.0),
+              child: Text(
+                'Deine Kreise',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
           if (_circles.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 40.0),
@@ -487,7 +721,7 @@ class _MyCirclesState extends State<MyCircles> {
               ),
             )
           else
-            ..._circles.map(_buildCircleCard),
+            ...unpinnedCircles.map(_buildCircleCard),
         ],
       ),
     );

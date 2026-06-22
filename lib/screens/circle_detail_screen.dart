@@ -6,6 +6,7 @@ import '../models/circle_model.dart';
 import 'invite_members_screen.dart';
 import 'circle_settings_screen.dart';
 
+
 // circle detail screen with options menu
 class CircleDetailScreen extends StatefulWidget {
   final Circle circle;
