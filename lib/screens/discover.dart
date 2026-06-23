@@ -3,71 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/circle_model.dart';
+import '../constants/interests.dart';
 import 'circle_detail_screen.dart';
-
-const List<String> _availableTags = [
-  'Sport & Fitness', 'Musik', 'Gaming', 'Lesen', 'Kochen', 'Reisen',
-  'Fotografie', 'Kunst', 'Film & Serien', 'Technologie', 'Natur', 'Mode',
-  'Yoga', 'Tanzen', 'Wissenschaft', 'Geschichte', 'Sprachen', 'Tiere',
-  'DIY', 'Finanzen', 'Politik', 'Philosophie', 'Familie', 'Ehrenamt',
-  'Ernährung',
-];
-
-const Map<String, IconData> _tagIcons = {
-  'Sport & Fitness': Icons.directions_run,
-  'Musik': Icons.music_note,
-  'Gaming': Icons.sports_esports,
-  'Lesen': Icons.menu_book,
-  'Kochen': Icons.restaurant,
-  'Reisen': Icons.flight,
-  'Fotografie': Icons.camera_alt,
-  'Kunst': Icons.brush,
-  'Film & Serien': Icons.movie,
-  'Technologie': Icons.computer,
-  'Natur': Icons.park,
-  'Mode': Icons.checkroom,
-  'Yoga': Icons.self_improvement,
-  'Tanzen': Icons.accessibility_new,
-  'Wissenschaft': Icons.science,
-  'Geschichte': Icons.history_edu,
-  'Sprachen': Icons.translate,
-  'Tiere': Icons.pets,
-  'DIY': Icons.construction,
-  'Finanzen': Icons.attach_money,
-  'Politik': Icons.account_balance,
-  'Philosophie': Icons.psychology,
-  'Familie': Icons.family_restroom,
-  'Ehrenamt': Icons.volunteer_activism,
-  'Ernährung': Icons.restaurant_menu,
-};
-
-const Map<String, Color> _tagColors = {
-  'Sport & Fitness': Color(0xFFFFE0B2),
-  'Musik': Color(0xFFE8F5E9),
-  'Gaming': Color(0xFFE3F2FD),
-  'Lesen': Color(0xFFFCE4EC),
-  'Kochen': Color(0xFFFFF8E1),
-  'Reisen': Color(0xFFBBDEFB),
-  'Fotografie': Color(0xFFF3E5F5),
-  'Kunst': Color(0xFFFFEBEE),
-  'Film & Serien': Color(0xFFE8EAF6),
-  'Technologie': Color(0xFFE0F2F1),
-  'Natur': Color(0xFFDCEDC8),
-  'Mode': Color(0xFFFCE4EC),
-  'Yoga': Color(0xFFEDE7F6),
-  'Tanzen': Color(0xFFE0F2F1),
-  'Wissenschaft': Color(0xFFE1F5FE),
-  'Geschichte': Color(0xFFFFF3E0),
-  'Sprachen': Color(0xFFE0F7FA),
-  'Tiere': Color(0xFFFFF8E1),
-  'DIY': Color(0xFFFBE9E7),
-  'Finanzen': Color(0xFFE8F5E9),
-  'Politik': Color(0xFFE3F2FD),
-  'Philosophie': Color(0xFFEDE7F6),
-  'Familie': Color(0xFFFCE4EC),
-  'Ehrenamt': Color(0xFFD7F5D7),
-  'Ernährung': Color(0xFFFFF9C4),
-};
 
 class Discover extends StatefulWidget {
   const Discover({super.key});
@@ -153,8 +90,8 @@ class _DiscoverState extends State<Discover> {
 
   // User's interests first, then remaining tags
   List<String> get _sortedTags {
-    final userTags = _availableTags.where((t) => _userInterests.contains(t)).toList();
-    final otherTags = _availableTags.where((t) => !_userInterests.contains(t)).toList();
+    final userTags = kAllInterests.where((t) => _userInterests.contains(t)).toList();
+    final otherTags = kAllInterests.where((t) => !_userInterests.contains(t)).toList();
     return [...userTags, ...otherTags];
   }
 
@@ -205,7 +142,7 @@ class _DiscoverState extends State<Discover> {
                           Navigator.pop(ctx);
                         },
                       ),
-                      ..._availableTags.map((tag) => FilterChip(
+                      ...kAllInterests.map((tag) => FilterChip(
                         label: Text(tag),
                         selected: _selectedTag == tag,
                         onSelected: (_) {
@@ -229,8 +166,8 @@ class _DiscoverState extends State<Discover> {
 
   Widget _buildTagCircle(String tag) {
     final isSelected = _selectedTag == tag;
-    final icon = _tagIcons[tag] ?? Icons.tag;
-    final bgColor = _tagColors[tag] ?? const Color(0xFFF5F5F5);
+    final icon = kTagIcons[tag] ?? Icons.tag;
+    final bgColor = kTagColors[tag] ?? const Color(0xFFF5F5F5);
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return GestureDetector(
@@ -280,7 +217,7 @@ class _DiscoverState extends State<Discover> {
         : null;
 
     final accentColor = circle.tags.isNotEmpty
-        ? (_tagColors[circle.tags.first] ?? const Color(0xFFFF9966))
+        ? (kTagColors[circle.tags.first] ?? const Color(0xFFFF9966))
         : const Color(0xFFFF9966);
 
     return GestureDetector(
@@ -326,7 +263,7 @@ class _DiscoverState extends State<Discover> {
                               ),
                             ),
                             child: Icon(
-                              _tagIcons[circle.tags.isNotEmpty ? circle.tags.first : ''] ??
+                              kTagIcons[circle.tags.isNotEmpty ? circle.tags.first : ''] ??
                                   Icons.group,
                               size: 44,
                               color: Colors.white.withValues(alpha: 0.45),

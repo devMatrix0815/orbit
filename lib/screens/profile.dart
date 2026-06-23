@@ -5,35 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Settings;
 import 'package:orbit/screens/settings.dart';
-
-// available interests
-const List<String> _allInterests = [
-  'Sport & Fitness',
-  'Musik',
-  'Gaming',
-  'Lesen',
-  'Kochen',
-  'Reisen',
-  'Fotografie',
-  'Kunst',
-  'Film & Serien',
-  'Technologie',
-  'Natur',
-  'Mode',
-  'Yoga',
-  'Tanzen',
-  'Wissenschaft',
-  'Geschichte',
-  'Sprachen',
-  'Tiere',
-  'DIY',
-  'Finanzen',
-  'Politik',
-  'Philosophie',
-  'Familie',
-  'Ehrenamt',
-  'Ernährung',
-];
+import '../constants/interests.dart';
 
 // profile tab - shows name, avatar and interests
 class Profile extends StatefulWidget {
@@ -417,7 +389,7 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
               child: Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: _allInterests.map((interest) {
+                children: kAllInterests.map((interest) {
                   final selected = _selected.contains(interest);
                   return FilterChip(
                     backgroundColor: const Color.fromARGB(255, 238, 238, 238),
