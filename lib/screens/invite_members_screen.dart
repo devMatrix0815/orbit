@@ -136,6 +136,8 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
       await FirebaseFirestore.instance.collection('invites').add({
         'invitedUserId': targetUid,
         'invitedDisplayName': targetDisplayName,
+        if (_foundUser!['profileImageBase64'] != null) 'invitedProfileImageBase64': _foundUser!['profileImageBase64'],
+        if (_foundUser!['profileImageUrl'] != null) 'invitedProfileImageUrl': _foundUser!['profileImageUrl'],
         'invitedBy': currentUid,
         'invitedAt': FieldValue.serverTimestamp(),
         'status': 'pending',
@@ -333,9 +335,10 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
                             final invite = _invites[index];
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
-                              leading: const CircleAvatar(
-                                child: Icon(Icons.person_outline),
-                              ),
+                              leading: _buildUserAvatar({
+                                'profileImageBase64': invite.invitedProfileImageBase64,
+                                'profileImageUrl': invite.invitedProfileImageUrl,
+                              }),
                               title: Text(invite.invitedDisplayName),
                               trailing: _buildStatusChip(invite.status),
                             );
