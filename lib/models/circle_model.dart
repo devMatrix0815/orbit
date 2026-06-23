@@ -14,6 +14,8 @@ class Circle {
   final String imageUrl;
   final List<String> operators;
   final List<String> banned;
+  // 'open' | 'request' | 'invite_only'
+  final String joinMode;
 
   Circle({
     required this.id,
@@ -28,6 +30,7 @@ class Circle {
     required this.imageUrl,
     this.operators = const [],
     this.banned = const [],
+    this.joinMode = 'open',
   });
 
   // create circle from firestore document
@@ -46,6 +49,7 @@ class Circle {
       imageUrl: data['imageUrl'] ?? '',
       operators: List<String>.from(data['operators'] ?? []),
       banned: List<String>.from(data['banned'] ?? []),
+      joinMode: data['joinMode'] as String? ?? 'open',
     );
   }
 }

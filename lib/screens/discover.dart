@@ -115,7 +115,10 @@ class _DiscoverState extends State<Discover> {
 
       final circles = circlesSnap.docs
           .map(Circle.fromFirestore)
-          .where((c) => !c.members.contains(uid) && !c.banned.contains(uid))
+          .where((c) =>
+              !c.members.contains(uid) &&
+              !c.banned.contains(uid) &&
+              c.joinMode != 'invite_only')
           .toList();
 
       // Sort by number of matching interests (descending), then by memberCount
