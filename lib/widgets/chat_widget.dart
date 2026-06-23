@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat_message_model.dart';
 import '../services/chat_service.dart';
+import '../widgets/user_badges.dart';
 import 'dart:convert';
 
 class ChatWidget extends StatefulWidget {
@@ -266,13 +267,19 @@ class _MessageBubble extends StatelessWidget {
                   : CrossAxisAlignment.start,
               children: [
                 if (!isOwnMessage) ...[
-                  Text(
-                    message.senderName,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        message.senderName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      UserBadgesRow(badges: message.senderBadges, size: 12),
+                    ],
                   ),
                   const SizedBox(height: 2),
                 ],
