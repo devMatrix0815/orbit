@@ -20,8 +20,11 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  int _notificationCount = 0;
-  StreamSubscription? _notifSub;
+  int _inviteCount = 0;
+  int _requestCount = 0;
+  int get _notificationCount => _inviteCount + _requestCount;
+  StreamSubscription? _inviteSub;
+  StreamSubscription? _requestSub;
 
   @override
   void initState() {
@@ -34,19 +37,30 @@ class _MainScreenState extends State<MainScreen> {
   void _listenNotifications() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    _notifSub = FirebaseFirestore.instance
+
+    _inviteSub = FirebaseFirestore.instance
         .collection('invites')
         .where('invitedUserId', isEqualTo: uid)
         .where('status', isEqualTo: 'pending')
         .snapshots()
         .listen((snap) {
-      if (mounted) setState(() => _notificationCount = snap.docs.length);
+      if (mounted) setState(() => _inviteCount = snap.docs.length);
+    });
+
+    _requestSub = FirebaseFirestore.instance
+        .collection('joinRequests')
+        .where('adminId', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .listen((snap) {
+      if (mounted) setState(() => _requestCount = snap.docs.length);
     });
   }
 
   @override
   void dispose() {
-    _notifSub?.cancel();
+    _inviteSub?.cancel();
+    _requestSub?.cancel();
     super.dispose();
   }
 
