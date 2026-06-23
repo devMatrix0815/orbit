@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/circle_model.dart';
+import '../constants/interests.dart';
 import 'circle_detail_screen.dart';
 
 // my circles tab - lists all circles the user is part of
@@ -84,14 +85,6 @@ class _TopCircleAvatar extends StatelessWidget {
     );
   }
 }
-
-const List<String> _availableTags = [
-  'Sport & Fitness', 'Musik', 'Gaming', 'Lesen', 'Kochen', 'Reisen',
-  'Fotografie', 'Kunst', 'Film & Serien', 'Technologie', 'Natur', 'Mode',
-  'Yoga', 'Tanzen', 'Wissenschaft', 'Geschichte', 'Sprachen', 'Tiere',
-  'DIY', 'Finanzen', 'Politik', 'Philosophie', 'Familie', 'Ehrenamt',
-  'Ernährung',
-];
 
 class _MyCirclesState extends State<MyCircles> {
   final TextEditingController _searchController = TextEditingController();
@@ -307,7 +300,7 @@ class _MyCirclesState extends State<MyCircles> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: _availableTags.map((tag) {
+                      children: kAllInterests.map((tag) {
                         final isSelected = selectedTags.contains(tag);
                         return FilterChip(
                           label: Text(tag),
@@ -413,6 +406,7 @@ class _MyCirclesState extends State<MyCircles> {
 
   // loads all circles from firestore where user is a member + pinned ids
   Future<void> _loadCircles() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
@@ -438,12 +432,14 @@ class _MyCirclesState extends State<MyCircles> {
         (userData?['pinnedCircles'] as List<dynamic>?) ?? [],
       );
 
+      if (!mounted) return;
       setState(() {
         _circles = circleSnap.docs.map(Circle.fromFirestore).toList();
         _pinnedIds = pinned;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Fehler beim Laden der Kreise.';
         _isLoading = false;

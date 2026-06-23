@@ -4,14 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/circle_model.dart';
-
-const List<String> _availableTags = [
-  'Sport & Fitness', 'Musik', 'Gaming', 'Lesen', 'Kochen', 'Reisen',
-  'Fotografie', 'Kunst', 'Film & Serien', 'Technologie', 'Natur', 'Mode',
-  'Yoga', 'Tanzen', 'Wissenschaft', 'Geschichte', 'Sprachen', 'Tiere',
-  'DIY', 'Finanzen', 'Politik', 'Philosophie', 'Familie', 'Ehrenamt',
-  'Ernährung',
-];
+import '../constants/interests.dart';
 
 // circle settings screen - change image, rename, delete
 class CircleSettingsScreen extends StatefulWidget {
@@ -698,7 +691,7 @@ class _InterestsSheetState extends State<_InterestsSheet> {
               child: Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: _availableTags.map((tag) {
+                children: kAllInterests.map((tag) {
                   final selected = _selected.contains(tag);
                   return FilterChip(
                     backgroundColor: const Color.fromARGB(255, 238, 238, 238),

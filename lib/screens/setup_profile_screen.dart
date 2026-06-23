@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/screens/main_screen.dart';
+import '../constants/interests.dart';
 
 // two step profile setup - step 1: name and age, step 2: interests
 class SetupProfileScreen extends StatefulWidget {
@@ -20,34 +21,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
 
-  // available interests
-  final List<String> _allInterests = [
-    'Sport & Fitness',
-    'Musik',
-    'Gaming',
-    'Lesen',
-    'Kochen',
-    'Reisen',
-    'Fotografie',
-    'Kunst',
-    'Film & Serien',
-    'Technologie',
-    'Natur',
-    'Mode',
-    'Yoga',
-    'Tanzen',
-    'Wissenschaft',
-    'Geschichte',
-    'Sprachen',
-    'Tiere',
-    'DIY',
-    'Finanzen',
-    'Politik',
-    'Philosophie',
-    'Familie',
-    'Ehrenamt',
-    'Ernährung',
-  ];
   final Set<String> _selectedInterests = {};
 
   @override
@@ -327,7 +300,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
               child: Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: _allInterests.map((interest) {
+                children: kAllInterests.map((interest) {
                   final selected = _selectedInterests.contains(interest);
                   return FilterChip(
                     backgroundColor: const Color.fromARGB(255, 238, 238, 238),
