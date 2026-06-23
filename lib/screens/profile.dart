@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Settings;
 import 'package:orbit/screens/settings.dart';
+import 'package:orbit/services/update_service.dart';
 import '../constants/interests.dart';
 import '../widgets/user_badges.dart';
 
@@ -29,6 +30,7 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     _loadProfile();
+    UpdateService.checkInBackground();
   }
 
   // load profile data from firestore
@@ -230,15 +232,36 @@ class _ProfileState extends State<Profile> {
 
         // settings button
         actions: [
-          IconButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => Settings()),
-              );
-              _loadProfile();
-            },
-            icon: const Icon(Icons.settings),
+          ValueListenableBuilder<bool>(
+            valueListenable: UpdateService.hasUpdate,
+            builder: (context, hasUpdate, _) => IconButton(
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Settings()),
+                );
+                _loadProfile();
+              },
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.settings),
+                  if (hasUpdate)
+                    Positioned(
+                      right: -2,
+                      top: -2,
+                      child: Container(
+                        width: 9,
+                        height: 9,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

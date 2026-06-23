@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,6 +22,20 @@ class UpdateInfo {
 
 class UpdateService {
   static final _dio = Dio();
+
+  // true when a newer release exists — listened to by the settings badge
+  static final hasUpdate = ValueNotifier<bool>(false);
+  static bool _hasCheckedThisSession = false;
+
+  // Silent background check — call once from the main screen initState.
+  static Future<void> checkInBackground() async {
+    if (_hasCheckedThisSession) return;
+    _hasCheckedThisSession = true;
+    try {
+      final update = await checkForUpdate();
+      if (update != null) hasUpdate.value = true;
+    } catch (_) {}
+  }
 
   static Future<String> currentVersion() async {
     final info = await PackageInfo.fromPlatform();
