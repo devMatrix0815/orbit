@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Settings;
 import 'package:orbit/screens/settings.dart';
 import '../constants/interests.dart';
+import '../widgets/user_badges.dart';
 
 // profile tab - shows name, avatar and interests
 class Profile extends StatefulWidget {
@@ -19,6 +20,7 @@ class _ProfileState extends State<Profile> {
   String _displayName = '';
   int? _age;
   List<String> _interests = [];
+  List<String> _badges = [];
   bool _loading = true;
   String? _profileImageBase64;
   bool _isPickingImage = false;
@@ -46,6 +48,7 @@ class _ProfileState extends State<Profile> {
       _displayName = data['displayName'] as String? ?? '';
       _age = data['age'] as int?;
       _interests = List<String>.from(data['interests'] ?? []);
+      _badges = List<String>.from(data['badges'] ?? []);
       _profileImageBase64 = data['profileImageBase64'] as String?;
       _loading = false;
     });
@@ -256,12 +259,17 @@ class _ProfileState extends State<Profile> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _displayName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  _displayName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                UserBadgesRow(badges: _badges, size: 18),
+                              ],
                             ),
                             if (_age != null) ...[
                               const SizedBox(height: 2),

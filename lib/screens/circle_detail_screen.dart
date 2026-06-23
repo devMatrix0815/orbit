@@ -6,6 +6,7 @@ import '../models/circle_model.dart';
 import 'invite_members_screen.dart';
 import '../widgets/chat_widget.dart';
 import 'circle_settings_screen.dart';
+import '../widgets/user_badges.dart';
 
 // circle detail screen with options menu
 class CircleDetailScreen extends StatefulWidget {
@@ -854,6 +855,7 @@ class _MembersSheetState extends State<_MembersSheet> {
                 final member = _members[index];
                 final uid = member['uid'] as String;
                 final name = member['displayName'] as String? ?? 'Unbekannt';
+                final badges = List<String>.from(member['badges'] ?? []);
                 final isAdmin = uid == _creatorUid;
                 final isOperator = _operators.contains(uid);
                 final isMe = uid == widget.currentUid;
@@ -879,7 +881,7 @@ class _MembersSheetState extends State<_MembersSheet> {
                       : null,
                   child: ListTile(
                     leading: _buildAvatar(member, isSelected, selectable),
-                    title: Text(name),
+                    title: nameWithBadges(name, badges: badges),
                     subtitle: isAdmin
                         ? const Text('Admin', style: TextStyle(fontSize: 12))
                         : isOperator

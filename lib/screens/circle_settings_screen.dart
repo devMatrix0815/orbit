@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/circle_model.dart';
 import '../constants/interests.dart';
+import '../widgets/user_badges.dart';
 
 // circle settings screen - change image, rename, delete
 class CircleSettingsScreen extends StatefulWidget {
@@ -608,6 +609,7 @@ class _BannedSheetState extends State<_BannedSheet> {
                 final member = _banned[index];
                 final uid = member['uid'] as String;
                 final name = member['displayName'] as String? ?? 'Unbekannt';
+                final badges = List<String>.from(member['badges'] ?? []);
                 final base64Str = member['profileImageBase64'] as String?;
                 final url = member['profileImageUrl'] as String?;
 
@@ -626,7 +628,7 @@ class _BannedSheetState extends State<_BannedSheet> {
 
                 return ListTile(
                   leading: avatar,
-                  title: Text(name),
+                  title: nameWithBadges(name, badges: badges),
                   trailing: TextButton(
                     onPressed: () => _unban(uid),
                     child: const Text('Entbannen'),

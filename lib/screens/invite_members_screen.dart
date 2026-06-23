@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/invite_model.dart';
+import '../widgets/user_badges.dart';
 
 // screen to search and invite users to a circle
 class InviteMembersScreen extends StatefulWidget {
@@ -288,8 +289,9 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   leading: _buildUserAvatar(_foundUser!),
-                  title: Text(
+                  title: nameWithBadges(
                     _foundUser!['displayName'] as String? ?? '',
+                    badges: List<String>.from(_foundUser!['badges'] ?? []),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   trailing: FilledButton(
