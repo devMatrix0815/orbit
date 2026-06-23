@@ -117,6 +117,8 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
         .get();
     final memberUids = List<String>.from(doc.data()?['members'] ?? []);
 
+    final operatorUids = Set<String>.from(doc.data()?['operators'] ?? []);
+
     if (!mounted) return;
     await showModalBottomSheet(
       context: context,
@@ -130,6 +132,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
         memberUids: memberUids,
         currentUid: currentUid,
         isCreator: isCreator,
+        initialOperators: operatorUids,
       ),
     );
   }
@@ -222,6 +225,7 @@ class _MembersSheet extends StatefulWidget {
   final List<String> memberUids;
   final String currentUid;
   final bool isCreator;
+  final Set<String> initialOperators;
 
   const _MembersSheet({
     required this.circleId,
@@ -229,6 +233,7 @@ class _MembersSheet extends StatefulWidget {
     required this.memberUids,
     required this.currentUid,
     required this.isCreator,
+    required this.initialOperators,
   });
 
   @override
@@ -240,15 +245,20 @@ class _MembersSheetState extends State<_MembersSheet> {
   bool _isLoading = true;
   bool _selectionMode = false;
   final Set<String> _selected = {};
-  bool _isRemoving = false;
+  late Set<String> _operators;
+  late String _creatorUid;
+  late bool _isSelfAdmin;
+  bool _isBusy = false;
 
   @override
   void initState() {
     super.initState();
+    _operators = Set.from(widget.initialOperators);
+    _creatorUid = widget.creatorUid;
+    _isSelfAdmin = widget.isCreator;
     _loadMembers();
   }
 
-  // load member profiles from firestore
   Future<void> _loadMembers() async {
     if (widget.memberUids.isEmpty) {
       setState(() => _isLoading = false);
@@ -256,8 +266,7 @@ class _MembersSheetState extends State<_MembersSheet> {
     }
     final docs = await Future.wait(
       widget.memberUids.map(
-        (uid) =>
-            FirebaseFirestore.instance.collection('users').doc(uid).get(),
+        (uid) => FirebaseFirestore.instance.collection('users').doc(uid).get(),
       ),
     );
     setState(() {
@@ -266,10 +275,13 @@ class _MembersSheetState extends State<_MembersSheet> {
         return {'uid': doc.id, ...data};
       }).toList();
 
-      // creator first, then alphabetical
+      // creator first, operators second, then alphabetical
       _members.sort((a, b) {
-        if (a['uid'] == widget.creatorUid) return -1;
-        if (b['uid'] == widget.creatorUid) return 1;
+        if (a['uid'] == _creatorUid) return -1;
+        if (b['uid'] == _creatorUid) return 1;
+        final aOp = _operators.contains(a['uid']) ? 0 : 1;
+        final bOp = _operators.contains(b['uid']) ? 0 : 1;
+        if (aOp != bOp) return aOp - bOp;
         return ((a['displayName'] as String?) ?? '')
             .compareTo((b['displayName'] as String?) ?? '');
       });
@@ -278,11 +290,15 @@ class _MembersSheetState extends State<_MembersSheet> {
   }
 
   bool _isSelectable(String uid) =>
-      uid != widget.currentUid && uid != widget.creatorUid;
+      uid != widget.currentUid && uid != _creatorUid;
 
-  // remove selected members from circle
+  void _exitSelection() => setState(() {
+        _selectionMode = false;
+        _selected.clear();
+      });
+
   Future<void> _removeSelected() async {
-    setState(() => _isRemoving = true);
+    setState(() => _isBusy = true);
     try {
       final toRemove = _selected.toList();
       await FirebaseFirestore.instance
@@ -291,11 +307,11 @@ class _MembersSheetState extends State<_MembersSheet> {
           .update({
         'members': FieldValue.arrayRemove(toRemove),
         'memberCount': FieldValue.increment(-toRemove.length),
+        'operators': FieldValue.arrayRemove(toRemove),
       });
       setState(() {
-        _members.removeWhere(
-          (m) => _selected.contains(m['uid'] as String),
-        );
+        _members.removeWhere((m) => _selected.contains(m['uid'] as String));
+        _operators.removeAll(toRemove);
         _selected.clear();
         _selectionMode = false;
       });
@@ -306,20 +322,128 @@ class _MembersSheetState extends State<_MembersSheet> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isRemoving = false);
+      if (mounted) setState(() => _isBusy = false);
     }
   }
 
-  // avatar with selection overlay when in selection mode
+  Future<void> _makeOperator() async {
+    final uid = _selected.first;
+    setState(() => _isBusy = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('circles')
+          .doc(widget.circleId)
+          .update({'operators': FieldValue.arrayUnion([uid])});
+      setState(() {
+        _operators.add(uid);
+        _selected.clear();
+        _selectionMode = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler beim Ändern der Rolle.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _removeOperator() async {
+    final uid = _selected.first;
+    setState(() => _isBusy = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('circles')
+          .doc(widget.circleId)
+          .update({'operators': FieldValue.arrayRemove([uid])});
+      setState(() {
+        _operators.remove(uid);
+        _selected.clear();
+        _selectionMode = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler beim Ändern der Rolle.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _transferAdmin() async {
+    final uid = _selected.first;
+    final memberData = _members.firstWhere((m) => m['uid'] == uid);
+    final name = memberData['displayName'] as String? ?? 'dieses Mitglied';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Admin übertragen'),
+        content: Text(
+          '$name wird zum neuen Admin. Du verlierst deine Admin-Rechte und wirst normales Mitglied.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Übertragen'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isBusy = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('circles')
+          .doc(widget.circleId)
+          .update({
+        'createdBy': uid,
+        'operators': FieldValue.arrayRemove([uid]),
+      });
+      setState(() {
+        _creatorUid = uid;
+        _isSelfAdmin = false;
+        _operators.remove(uid);
+        _members.sort((a, b) {
+          if (a['uid'] == _creatorUid) return -1;
+          if (b['uid'] == _creatorUid) return 1;
+          final aOp = _operators.contains(a['uid']) ? 0 : 1;
+          final bOp = _operators.contains(b['uid']) ? 0 : 1;
+          if (aOp != bOp) return aOp - bOp;
+          return ((a['displayName'] as String?) ?? '')
+              .compareTo((b['displayName'] as String?) ?? '');
+        });
+        _selected.clear();
+        _selectionMode = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler beim Übertragen.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
   Widget _buildAvatar(Map<String, dynamic> member, bool isSelected, bool selectable) {
     final base64Str = member['profileImageBase64'] as String?;
     final url = member['profileImageUrl'] as String?;
 
     Widget avatar;
     if (base64Str != null && base64Str.isNotEmpty) {
-      avatar = CircleAvatar(
-        backgroundImage: MemoryImage(base64Decode(base64Str)),
-      );
+      avatar = CircleAvatar(backgroundImage: MemoryImage(base64Decode(base64Str)));
     } else if (url != null && url.isNotEmpty) {
       avatar = CircleAvatar(backgroundImage: NetworkImage(url));
     } else {
@@ -347,8 +471,44 @@ class _MembersSheetState extends State<_MembersSheet> {
     );
   }
 
+  // single icon-button entry for the action toolbar
+  Widget _buildAction({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onTap,
+    Color? color,
+  }) {
+    final effectiveColor = onTap == null
+        ? Theme.of(context).disabledColor
+        : (color ?? Theme.of(context).colorScheme.onSurface);
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: effectiveColor, size: 26),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(fontSize: 11, color: effectiveColor),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final singleSelected = _selected.length == 1 ? _selected.first : null;
+    final singleIsOperator = singleSelected != null && _operators.contains(singleSelected);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -372,26 +532,17 @@ class _MembersSheetState extends State<_MembersSheet> {
               if (_selectionMode) ...[
                 Text(
                   '${_selected.length} ausgewählt',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 const Spacer(),
                 TextButton(
-                  onPressed: () => setState(() {
-                    _selectionMode = false;
-                    _selected.clear();
-                  }),
+                  onPressed: _exitSelection,
                   child: const Text('Abbrechen'),
                 ),
               ] else
                 Text(
                   'Mitglieder (${_members.length})',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
             ],
           ),
@@ -415,11 +566,11 @@ class _MembersSheetState extends State<_MembersSheet> {
               itemBuilder: (context, index) {
                 final member = _members[index];
                 final uid = member['uid'] as String;
-                final name =
-                    member['displayName'] as String? ?? 'Unbekannt';
-                final isAdmin = uid == widget.creatorUid;
+                final name = member['displayName'] as String? ?? 'Unbekannt';
+                final isAdmin = uid == _creatorUid;
+                final isOperator = _operators.contains(uid);
                 final isMe = uid == widget.currentUid;
-                final selectable = _isSelectable(uid) && widget.isCreator;
+                final selectable = _isSelectable(uid) && _isSelfAdmin;
                 final isSelected = _selected.contains(uid);
 
                 return GestureDetector(
@@ -433,9 +584,7 @@ class _MembersSheetState extends State<_MembersSheet> {
                       ? () => setState(() {
                             if (isSelected) {
                               _selected.remove(uid);
-                              if (_selected.isEmpty) {
-                                _selectionMode = false;
-                              }
+                              if (_selected.isEmpty) _selectionMode = false;
                             } else {
                               _selected.add(uid);
                             }
@@ -445,16 +594,18 @@ class _MembersSheetState extends State<_MembersSheet> {
                     leading: _buildAvatar(member, isSelected, selectable),
                     title: Text(name),
                     subtitle: isAdmin
-                        ? const Text(
-                            'Admin',
-                            style: TextStyle(fontSize: 12),
-                          )
-                        : isMe
-                            ? const Text(
-                                'Du',
-                                style: TextStyle(fontSize: 12),
+                        ? const Text('Admin', style: TextStyle(fontSize: 12))
+                        : isOperator
+                            ? Text(
+                                'Operator',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                               )
-                            : null,
+                            : isMe
+                                ? const Text('Du', style: TextStyle(fontSize: 12))
+                                : null,
                     selected: isSelected,
                   ),
                 );
@@ -462,38 +613,43 @@ class _MembersSheetState extends State<_MembersSheet> {
             ),
           ),
 
-        // remove button
-        if (_selectionMode && widget.isCreator && _selected.isNotEmpty)
+        // action toolbar — shown when selection is active
+        if (_selectionMode && _isSelfAdmin && _selected.isNotEmpty) ...[
+          const Divider(height: 1),
           Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              8,
-              20,
-              MediaQuery.of(context).padding.bottom + 20,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 8,
             ),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.red,
+            child: Row(
+              children: [
+                _buildAction(
+                  icon: Icons.person_remove_outlined,
+                  label: '${_selected.length} entfernen',
+                  onTap: _isBusy ? null : _removeSelected,
+                  color: Colors.red,
                 ),
-                onPressed: _isRemoving ? null : _removeSelected,
-                child: _isRemoving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                if (singleSelected != null) ...[
+                  singleIsOperator
+                      ? _buildAction(
+                          icon: Icons.shield_outlined,
+                          label: 'Operator\nentfernen',
+                          onTap: _isBusy ? null : _removeOperator,
+                        )
+                      : _buildAction(
+                          icon: Icons.shield,
+                          label: 'Zum Operator\nmachen',
+                          onTap: _isBusy ? null : _makeOperator,
                         ),
-                      )
-                    : Text(
-                        '${_selected.length} entfernen',
-                      ),
-              ),
+                  _buildAction(
+                    icon: Icons.admin_panel_settings_outlined,
+                    label: 'Admin\nübertragen',
+                    onTap: _isBusy ? null : _transferAdmin,
+                  ),
+                ],
+              ],
             ),
-          )
-        else
+          ),
+        ] else
           SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
       ],
     );
