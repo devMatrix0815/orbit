@@ -40,6 +40,7 @@ class ChatService {
       timestamp: DateTime.now(),
       senderProfileImageBase64: userData['profileImageBase64'],
       senderProfileImageUrl: userData['profileImageUrl'],
+      senderBadges: List<String>.from(userData['badges'] ?? []),
     );
 
     await _firestore

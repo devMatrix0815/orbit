@@ -7,6 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/screens/login_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:orbit/services/update_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:orbit/main.dart' show themeNotifier;
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -17,15 +19,24 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   bool _checkingUpdate = false;
-  double? _downloadProgress; // null = not downloading
+  double? _downloadProgress;
   String _currentVersion = '';
+  bool _isDarkMode = false;
 
   @override
   void initState() {
     super.initState();
+    _isDarkMode = themeNotifier.value == ThemeMode.dark;
     UpdateService.currentVersion().then((v) {
       if (mounted) setState(() => _currentVersion = v);
     });
+  }
+
+  Future<void> _toggleTheme(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('dark_mode', isDark);
+    themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
+    setState(() => _isDarkMode = isDark);
   }
 
   // load current profile data and show edit sheet
@@ -261,6 +272,34 @@ class _SettingsState extends State<Settings> {
         padding: EdgeInsetsGeometry.all(18.0),
         child: ListView(
           children: [
+            // dark / light mode toggle
+            Card(
+              clipBehavior: Clip.hardEdge,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 6.0,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(child: Text('Dark Mode')),
+                    Switch(
+                      value: _isDarkMode,
+                      onChanged: _toggleTheme,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
             // edit profile
             Card(
               clipBehavior: Clip.hardEdge,

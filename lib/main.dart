@@ -3,11 +3,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/setup_profile_screen.dart';
+
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
@@ -17,6 +20,10 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final prefs = await SharedPreferences.getInstance();
+  final isDark = prefs.getBool('dark_mode') ?? false;
+  themeNotifier.value = isDark ? ThemeMode.dark : ThemeMode.light;
 
   FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
   await FirebaseMessaging.instance.requestPermission(
@@ -33,8 +40,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, _) => MaterialApp(
+      title: 'Orbit',
 
       // light theme
       theme: ThemeData(
@@ -60,8 +69,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      // set thememode
-      themeMode: ThemeMode.light,
+      themeMode: mode,
 
       // homepage
       home: StreamBuilder<User?>(
@@ -104,6 +112,6 @@ class MyApp extends StatelessWidget {
           return const LoginScreen();
         },
       ),
-    );
+    ));
   }
 }

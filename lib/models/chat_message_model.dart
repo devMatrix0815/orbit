@@ -7,6 +7,7 @@ class ChatMessage {
   final DateTime timestamp;
   final String? senderProfileImageBase64;
   final String? senderProfileImageUrl;
+  final List<String> senderBadges;
   final MessageType type;
 
   ChatMessage({
@@ -18,6 +19,7 @@ class ChatMessage {
     required this.timestamp,
     this.senderProfileImageBase64,
     this.senderProfileImageUrl,
+    this.senderBadges = const [],
     this.type = MessageType.text,
   });
 
@@ -30,6 +32,7 @@ class ChatMessage {
       'timestamp': timestamp.toIso8601String(),
       'senderProfileImageBase64': senderProfileImageBase64,
       'senderProfileImageUrl': senderProfileImageUrl,
+      'senderBadges': senderBadges,
       'type': type.name,
     };
   }
@@ -46,6 +49,7 @@ class ChatMessage {
       ),
       senderProfileImageBase64: map['senderProfileImageBase64'],
       senderProfileImageUrl: map['senderProfileImageUrl'],
+      senderBadges: List<String>.from(map['senderBadges'] ?? []),
       type: MessageType.values.firstWhere(
         (e) => e.name == map['type'],
         orElse: () => MessageType.text,
