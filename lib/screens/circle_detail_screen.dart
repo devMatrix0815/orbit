@@ -19,11 +19,98 @@ class CircleDetailScreen extends StatefulWidget {
 
 class _CircleDetailScreenState extends State<CircleDetailScreen> {
   late String _circleName;
+  bool _requestSent = false;
+  bool _requestLoading = false;
+  bool _joinLoading = false;
 
   @override
   void initState() {
     super.initState();
     _circleName = widget.circle.name;
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (!widget.circle.members.contains(uid) &&
+        widget.circle.joinMode == 'request') {
+      _checkExistingRequest(uid);
+    }
+  }
+
+  Future<void> _checkExistingRequest(String uid) async {
+    final snap = await FirebaseFirestore.instance
+        .collection('joinRequests')
+        .where('circleId', isEqualTo: widget.circle.id)
+        .where('requestingUserId', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .limit(1)
+        .get();
+    if (mounted) setState(() => _requestSent = snap.docs.isNotEmpty);
+  }
+
+  Future<void> _joinDirectly() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    setState(() => _joinLoading = true);
+    try {
+      await FirebaseFirestore.instance
+          .collection('circles')
+          .doc(widget.circle.id)
+          .update({
+            'members': FieldValue.arrayUnion([uid]),
+            'memberCount': FieldValue.increment(1),
+          });
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _joinLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler beim Beitreten.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendJoinRequest() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+    setState(() => _requestLoading = true);
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .get();
+      final userData = userDoc.data() ?? {};
+
+      await FirebaseFirestore.instance.collection('joinRequests').add({
+        'circleId': widget.circle.id,
+        'circleName': _circleName,
+        'circleImageBase64': widget.circle.imageBase64,
+        'circleImageUrl': widget.circle.imageUrl.isNotEmpty
+            ? widget.circle.imageUrl
+            : null,
+        'requestingUserId': currentUser.uid,
+        'requestingDisplayName':
+            userData['displayName'] ?? currentUser.displayName ?? 'Unbekannt',
+        'requestingUserImageBase64': userData['profileImageBase64'],
+        'requestingUserImageUrl': userData['profileImageUrl'],
+        'requestedAt': FieldValue.serverTimestamp(),
+        'status': 'pending',
+        'adminId': widget.circle.createdBy,
+      });
+      if (mounted) setState(() => _requestSent = true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Anfrage gesendet!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _requestLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler beim Senden der Anfrage.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _requestLoading = false);
+    }
   }
 
   // leave group with confirmation dialog
@@ -141,14 +228,17 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final isMember = widget.circle.members.contains(currentUid);
     final isCreator = currentUid == widget.circle.createdBy;
+
+    if (!isMember) {
+      return _buildNonMemberView(context);
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_circleName),
-
-        // options menu - different for creator vs member
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -217,6 +307,123 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
       ),
       body: SizedBox.expand(
         child: ChatWidget(circleId: widget.circle.id, circleName: _circleName),
+      ),
+    );
+  }
+
+  Widget _buildNonMemberView(BuildContext context) {
+    final circle = widget.circle;
+    final imageBytes =
+        circle.imageBase64 != null ? base64Decode(circle.imageBase64!) : null;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    Widget joinButton;
+    switch (circle.joinMode) {
+      case 'open':
+        joinButton = _joinLoading
+            ? const CircularProgressIndicator()
+            : FilledButton.icon(
+                onPressed: _joinDirectly,
+                icon: const Icon(Icons.login),
+                label: const Text('Gruppe beitreten'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                ),
+              );
+      case 'request':
+        if (_requestSent) {
+          joinButton = OutlinedButton.icon(
+            onPressed: null,
+            icon: const Icon(Icons.hourglass_top_outlined),
+            label: const Text('Anfrage gesendet'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 52),
+            ),
+          );
+        } else {
+          joinButton = _requestLoading
+              ? const CircularProgressIndicator()
+              : FilledButton.icon(
+                  onPressed: _sendJoinRequest,
+                  icon: const Icon(Icons.how_to_reg_outlined),
+                  label: const Text('Beitrittsanfrage senden'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 52),
+                  ),
+                );
+        }
+      default:
+        joinButton = OutlinedButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.lock_outline),
+          label: const Text('Nur auf Einladung'),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 52),
+          ),
+        );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text(_circleName)),
+      body: ListView(
+        children: [
+          // header image
+          SizedBox(
+            height: 220,
+            child: imageBytes != null
+                ? Image.memory(imageBytes, fit: BoxFit.cover)
+                : Container(
+                    color: primary.withValues(alpha: 0.15),
+                    child: Icon(Icons.group, size: 64, color: primary),
+                  ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _circleName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.group, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${circle.memberCount} Mitglieder',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+                if (circle.description.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(circle.description),
+                ],
+                if (circle.tags.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: circle.tags
+                        .map((tag) => Chip(
+                              label: Text(tag, style: const TextStyle(fontSize: 12)),
+                              backgroundColor: Colors.grey[100],
+                              side: BorderSide.none,
+                            ))
+                        .toList(),
+                  ),
+                ],
+                const SizedBox(height: 28),
+                joinButton,
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

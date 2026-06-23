@@ -31,6 +31,7 @@ class CircleSettingsScreen extends StatefulWidget {
 class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
   late String _name;
   late List<String> _tags;
+  late String _joinMode;
   Uint8List? _imageBytes;
   bool _isPickingImage = false;
 
@@ -39,8 +40,8 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     super.initState();
     _name = widget.initialName;
     _tags = List<String>.from(widget.circle.tags);
+    _joinMode = widget.circle.joinMode;
 
-    // decode existing image if available
     if (widget.circle.imageBase64 != null) {
       _imageBytes = base64Decode(widget.circle.imageBase64!);
     }
@@ -240,6 +241,22 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     }
   }
 
+  Future<void> _setJoinMode(String mode) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('circles')
+          .doc(widget.circle.id)
+          .update({'joinMode': mode});
+      setState(() => _joinMode = mode);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler beim Speichern.')),
+        );
+      }
+    }
+  }
+
   // return updated name when navigating back
   void _popWithResult() {
     Navigator.pop(context, {'name': _name, 'tags': _tags});
@@ -385,6 +402,41 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
 
             const Divider(),
 
+            // join mode selector
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Text(
+                'Beitrittsart',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            _JoinModeOption(
+              icon: Icons.lock_open_outlined,
+              title: 'Offen',
+              subtitle: 'Jeder kann direkt beitreten',
+              selected: _joinMode == 'open',
+              onTap: () => _setJoinMode('open'),
+            ),
+            _JoinModeOption(
+              icon: Icons.how_to_reg_outlined,
+              title: 'Anfrage',
+              subtitle: 'Beitritt per Anfrage – du entscheidest',
+              selected: _joinMode == 'request',
+              onTap: () => _setJoinMode('request'),
+            ),
+            _JoinModeOption(
+              icon: Icons.lock_outlined,
+              title: 'Privat',
+              subtitle: 'Nur Eingeladene – nicht in Entdecken sichtbar',
+              selected: _joinMode == 'invite_only',
+              onTap: () => _setJoinMode('invite_only'),
+            ),
+
+            const Divider(),
+
             // banned members
             ListTile(
               leading: const Icon(Icons.block_outlined),
@@ -407,6 +459,42 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _JoinModeOption extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _JoinModeOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return ListTile(
+      leading: Icon(icon, color: selected ? primary : null),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          color: selected ? primary : null,
+        ),
+      ),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+      trailing: selected
+          ? Icon(Icons.check_circle, color: primary)
+          : const Icon(Icons.radio_button_unchecked, color: Colors.grey),
+      onTap: onTap,
     );
   }
 }
