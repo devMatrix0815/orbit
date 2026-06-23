@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/circle_model.dart';
 import 'invite_members_screen.dart';
+import '../widgets/chat_widget.dart';
 import 'circle_settings_screen.dart';
-
 
 // circle detail screen with options menu
 class CircleDetailScreen extends StatefulWidget {
@@ -57,9 +57,9 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
           .collection('circles')
           .doc(widget.circle.id)
           .update({
-        'members': FieldValue.arrayRemove([currentUid]),
-        'memberCount': FieldValue.increment(-1),
-      });
+            'members': FieldValue.arrayRemove([currentUid]),
+            'memberCount': FieldValue.increment(-1),
+          });
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -79,7 +79,9 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
           circleId: widget.circle.id,
           circleName: _circleName,
           circleImageBase64: widget.circle.imageBase64,
-          circleImageUrl: widget.circle.imageUrl.isNotEmpty ? widget.circle.imageUrl : null,
+          circleImageUrl: widget.circle.imageUrl.isNotEmpty
+              ? widget.circle.imageUrl
+              : null,
           members: widget.circle.members,
         ),
       ),
@@ -213,7 +215,9 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
           ),
         ],
       ),
-      body: const SizedBox.expand(),
+      body: SizedBox.expand(
+        child: ChatWidget(circleId: widget.circle.id, circleName: _circleName),
+      ),
     );
   }
 }
@@ -282,8 +286,9 @@ class _MembersSheetState extends State<_MembersSheet> {
         final aOp = _operators.contains(a['uid']) ? 0 : 1;
         final bOp = _operators.contains(b['uid']) ? 0 : 1;
         if (aOp != bOp) return aOp - bOp;
-        return ((a['displayName'] as String?) ?? '')
-            .compareTo((b['displayName'] as String?) ?? '');
+        return ((a['displayName'] as String?) ?? '').compareTo(
+          (b['displayName'] as String?) ?? '',
+        );
       });
       _isLoading = false;
     });
@@ -293,9 +298,9 @@ class _MembersSheetState extends State<_MembersSheet> {
       uid != widget.currentUid && uid != _creatorUid;
 
   void _exitSelection() => setState(() {
-        _selectionMode = false;
-        _selected.clear();
-      });
+    _selectionMode = false;
+    _selected.clear();
+  });
 
   Future<void> _removeSelected() async {
     setState(() => _isBusy = true);
@@ -305,10 +310,10 @@ class _MembersSheetState extends State<_MembersSheet> {
           .collection('circles')
           .doc(widget.circleId)
           .update({
-        'members': FieldValue.arrayRemove(toRemove),
-        'memberCount': FieldValue.increment(-toRemove.length),
-        'operators': FieldValue.arrayRemove(toRemove),
-      });
+            'members': FieldValue.arrayRemove(toRemove),
+            'memberCount': FieldValue.increment(-toRemove.length),
+            'operators': FieldValue.arrayRemove(toRemove),
+          });
       setState(() {
         _members.removeWhere((m) => _selected.contains(m['uid'] as String));
         _operators.removeAll(toRemove);
@@ -317,9 +322,9 @@ class _MembersSheetState extends State<_MembersSheet> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Entfernen.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Fehler beim Entfernen.')));
       }
     } finally {
       if (mounted) setState(() => _isBusy = false);
@@ -333,7 +338,9 @@ class _MembersSheetState extends State<_MembersSheet> {
       await FirebaseFirestore.instance
           .collection('circles')
           .doc(widget.circleId)
-          .update({'operators': FieldValue.arrayUnion([uid])});
+          .update({
+            'operators': FieldValue.arrayUnion([uid]),
+          });
       setState(() {
         _operators.add(uid);
         _selected.clear();
@@ -357,7 +364,9 @@ class _MembersSheetState extends State<_MembersSheet> {
       await FirebaseFirestore.instance
           .collection('circles')
           .doc(widget.circleId)
-          .update({'operators': FieldValue.arrayRemove([uid])});
+          .update({
+            'operators': FieldValue.arrayRemove([uid]),
+          });
       setState(() {
         _operators.remove(uid);
         _selected.clear();
@@ -379,7 +388,9 @@ class _MembersSheetState extends State<_MembersSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(count == 1 ? 'Mitglied bannen?' : '$count Mitglieder bannen?'),
+        title: Text(
+          count == 1 ? 'Mitglied bannen?' : '$count Mitglieder bannen?',
+        ),
         content: Text(
           count == 1
               ? 'Diese Person wird entfernt und kann der Gruppe nicht mehr beitreten.'
@@ -407,11 +418,11 @@ class _MembersSheetState extends State<_MembersSheet> {
           .collection('circles')
           .doc(widget.circleId)
           .update({
-        'banned': FieldValue.arrayUnion(toBan),
-        'members': FieldValue.arrayRemove(toBan),
-        'memberCount': FieldValue.increment(-toBan.length),
-        'operators': FieldValue.arrayRemove(toBan),
-      });
+            'banned': FieldValue.arrayUnion(toBan),
+            'members': FieldValue.arrayRemove(toBan),
+            'memberCount': FieldValue.increment(-toBan.length),
+            'operators': FieldValue.arrayRemove(toBan),
+          });
       setState(() {
         _members.removeWhere((m) => _selected.contains(m['uid'] as String));
         _operators.removeAll(toBan);
@@ -420,9 +431,9 @@ class _MembersSheetState extends State<_MembersSheet> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Bannen.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Fehler beim Bannen.')));
       }
     } finally {
       if (mounted) setState(() => _isBusy = false);
@@ -462,9 +473,9 @@ class _MembersSheetState extends State<_MembersSheet> {
           .collection('circles')
           .doc(widget.circleId)
           .update({
-        'createdBy': uid,
-        'operators': FieldValue.arrayRemove([uid]),
-      });
+            'createdBy': uid,
+            'operators': FieldValue.arrayRemove([uid]),
+          });
       setState(() {
         _creatorUid = uid;
         _isSelfAdmin = false;
@@ -475,8 +486,9 @@ class _MembersSheetState extends State<_MembersSheet> {
           final aOp = _operators.contains(a['uid']) ? 0 : 1;
           final bOp = _operators.contains(b['uid']) ? 0 : 1;
           if (aOp != bOp) return aOp - bOp;
-          return ((a['displayName'] as String?) ?? '')
-              .compareTo((b['displayName'] as String?) ?? '');
+          return ((a['displayName'] as String?) ?? '').compareTo(
+            (b['displayName'] as String?) ?? '',
+          );
         });
         _selected.clear();
         _selectionMode = false;
@@ -492,13 +504,19 @@ class _MembersSheetState extends State<_MembersSheet> {
     }
   }
 
-  Widget _buildAvatar(Map<String, dynamic> member, bool isSelected, bool selectable) {
+  Widget _buildAvatar(
+    Map<String, dynamic> member,
+    bool isSelected,
+    bool selectable,
+  ) {
     final base64Str = member['profileImageBase64'] as String?;
     final url = member['profileImageUrl'] as String?;
 
     Widget avatar;
     if (base64Str != null && base64Str.isNotEmpty) {
-      avatar = CircleAvatar(backgroundImage: MemoryImage(base64Decode(base64Str)));
+      avatar = CircleAvatar(
+        backgroundImage: MemoryImage(base64Decode(base64Str)),
+      );
     } else if (url != null && url.isNotEmpty) {
       avatar = CircleAvatar(backgroundImage: NetworkImage(url));
     } else {
@@ -562,7 +580,8 @@ class _MembersSheetState extends State<_MembersSheet> {
   @override
   Widget build(BuildContext context) {
     final singleSelected = _selected.length == 1 ? _selected.first : null;
-    final singleIsOperator = singleSelected != null && _operators.contains(singleSelected);
+    final singleIsOperator =
+        singleSelected != null && _operators.contains(singleSelected);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -587,7 +606,10 @@ class _MembersSheetState extends State<_MembersSheet> {
               if (_selectionMode) ...[
                 Text(
                   '${_selected.length} ausgewählt',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
                 const Spacer(),
                 TextButton(
@@ -597,7 +619,10 @@ class _MembersSheetState extends State<_MembersSheet> {
               ] else
                 Text(
                   'Mitglieder (${_members.length})',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
             ],
           ),
@@ -631,19 +656,19 @@ class _MembersSheetState extends State<_MembersSheet> {
                 return GestureDetector(
                   onLongPress: selectable && !_selectionMode
                       ? () => setState(() {
-                            _selectionMode = true;
-                            _selected.add(uid);
-                          })
+                          _selectionMode = true;
+                          _selected.add(uid);
+                        })
                       : null,
                   onTap: _selectionMode && selectable
                       ? () => setState(() {
-                            if (isSelected) {
-                              _selected.remove(uid);
-                              if (_selected.isEmpty) _selectionMode = false;
-                            } else {
-                              _selected.add(uid);
-                            }
-                          })
+                          if (isSelected) {
+                            _selected.remove(uid);
+                            if (_selected.isEmpty) _selectionMode = false;
+                          } else {
+                            _selected.add(uid);
+                          }
+                        })
                       : null,
                   child: ListTile(
                     leading: _buildAvatar(member, isSelected, selectable),
@@ -651,16 +676,16 @@ class _MembersSheetState extends State<_MembersSheet> {
                     subtitle: isAdmin
                         ? const Text('Admin', style: TextStyle(fontSize: 12))
                         : isOperator
-                            ? Text(
-                                'Operator',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              )
-                            : isMe
-                                ? const Text('Du', style: TextStyle(fontSize: 12))
-                                : null,
+                        ? Text(
+                            'Operator',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          )
+                        : isMe
+                        ? const Text('Du', style: TextStyle(fontSize: 12))
+                        : null,
                     selected: isSelected,
                   ),
                 );
