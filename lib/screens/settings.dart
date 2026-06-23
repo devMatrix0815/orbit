@@ -219,6 +219,7 @@ class _SettingsState extends State<Settings> {
       if (install != true || !mounted) return;
 
       setState(() => _downloadProgress = 0.0);
+      UpdateService.hasUpdate.value = false;
 
       await UpdateService.downloadAndInstall(
         update.downloadUrl,
