@@ -12,6 +12,7 @@ class Circle {
   final List<String> tags;
   final String description;
   final String imageUrl;
+  final List<String> operators;
 
   Circle({
     required this.id,
@@ -24,6 +25,7 @@ class Circle {
     required this.tags,
     required this.description,
     required this.imageUrl,
+    this.operators = const [],
   });
 
   // create circle from firestore document
@@ -40,6 +42,7 @@ class Circle {
       tags: List<String>.from(data['tags'] ?? []),
       description: data['description'] ?? '',
       imageUrl: data['imageUrl'] ?? '',
+      operators: List<String>.from(data['operators'] ?? []),
     );
   }
 }
