@@ -5,10 +5,28 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/screens/login_screen.dart';
+import 'package:dio/dio.dart';
+import 'package:orbit/services/update_service.dart';
 
-// settings screen - edit profile, sign out, delete account
-class Settings extends StatelessWidget {
+class Settings extends StatefulWidget {
   const Settings({super.key});
+
+  @override
+  State<Settings> createState() => _SettingsState();
+}
+
+class _SettingsState extends State<Settings> {
+  bool _checkingUpdate = false;
+  double? _downloadProgress; // null = not downloading
+  String _currentVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    UpdateService.currentVersion().then((v) {
+      if (mounted) setState(() => _currentVersion = v);
+    });
+  }
 
   // load current profile data and show edit sheet
   Future<void> _editProfile(BuildContext context) async {
@@ -150,6 +168,84 @@ class Settings extends StatelessWidget {
     }
   }
 
+  Future<void> _checkForUpdate() async {
+    setState(() => _checkingUpdate = true);
+
+    try {
+      final update = await UpdateService.checkForUpdate();
+
+      if (!mounted) return;
+
+      if (update == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Du verwendest bereits die neueste Version.')),
+        );
+        return;
+      }
+
+      final install = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Update verfügbar – v${update.version}'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (update.releaseNotes.isNotEmpty) ...[
+                  const Text(
+                    'Änderungen:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(update.releaseNotes),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Später'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Jetzt installieren'),
+            ),
+          ],
+        ),
+      );
+
+      if (install != true || !mounted) return;
+
+      setState(() => _downloadProgress = 0.0);
+
+      await UpdateService.downloadAndInstall(
+        update.downloadUrl,
+        onProgress: (p) {
+          if (mounted) setState(() => _downloadProgress = p);
+        },
+      );
+    } on DioException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Netzwerkfehler: ${e.message}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _checkingUpdate = false;
+          _downloadProgress = null;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -193,6 +289,88 @@ class Settings extends StatelessWidget {
                         Icons.chevron_right,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // app update
+            Card(
+              clipBehavior: Clip.hardEdge,
+              child: InkWell(
+                onTap: (_checkingUpdate || _downloadProgress != null)
+                    ? null
+                    : _checkForUpdate,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 14.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.system_update,
+                                  size: 18,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text('App-Update'),
+                                if (_currentVersion.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'v$_currentVersion',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withAlpha(150),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          if (_checkingUpdate)
+                            const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          else if (_downloadProgress == null)
+                            Icon(
+                              Icons.chevron_right,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                        ],
+                      ),
+                      if (_downloadProgress != null) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: LinearProgressIndicator(
+                                value: _downloadProgress,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '${(_downloadProgress! * 100).toStringAsFixed(0)} %',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
