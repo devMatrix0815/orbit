@@ -1220,6 +1220,18 @@ abstract class AppLocalizations {
   /// **'Nachricht schreiben...'**
   String get writeMessage;
 
+  /// No description provided for @replyTo.
+  ///
+  /// In de, this message translates to:
+  /// **'Antwort auf'**
+  String get replyTo;
+
+  /// No description provided for @cannotDeleteOthersMessages.
+  ///
+  /// In de, this message translates to:
+  /// **'Du kannst nur deine eigenen Nachrichten löschen.'**
+  String get cannotDeleteOthersMessages;
+
   /// No description provided for @settingsTitle.
   ///
   /// In de, this message translates to:

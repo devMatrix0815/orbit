@@ -628,6 +628,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get writeMessage => 'Nachricht schreiben...';
 
   @override
+  String get replyTo => 'Antwort auf';
+
+  @override
+  String get cannotDeleteOthersMessages =>
+      'Du kannst nur deine eigenen Nachrichten löschen.';
+
+  @override
   String get settingsTitle => 'Einstellungen';
 
   @override

@@ -22,7 +22,14 @@ class ChatService {
         });
   }
 
-  Future<void> sendMessage(String circleId, String text) async {
+  Future<void> sendMessage(
+    String circleId,
+    String text, {
+    String? replyToId,
+    String? replyToText,
+    String? replyToSenderName,
+    List<String> mentionedUids = const [],
+  }) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Nicht eingeloggt');
 
@@ -39,6 +46,10 @@ class ChatService {
       senderProfileImageBase64: userData['profileImageBase64'],
       senderProfileImageUrl: userData['profileImageUrl'],
       senderBadges: List<String>.from(userData['badges'] ?? []),
+      replyToId: replyToId,
+      replyToText: replyToText,
+      replyToSenderName: replyToSenderName,
+      mentionedUids: mentionedUids,
     );
 
     await _firestore
@@ -47,11 +58,32 @@ class ChatService {
         .collection('messages')
         .add(message.toMap());
 
+    if (mentionedUids.isNotEmpty) {
+      final batch = _firestore.batch();
+      for (final uid in mentionedUids) {
+        batch.set(
+          _firestore.collection('users').doc(uid),
+          {'circlesWithMentions': FieldValue.arrayUnion([circleId])},
+          SetOptions(merge: true),
+        );
+      }
+      await batch.commit();
+    }
+
     await _firestore.collection('circles').doc(circleId).update({
       'lastMessage': text,
       'lastMessageTimestamp': FieldValue.serverTimestamp(),
       'lastMessageSender': userData['displayName'] ?? 'Unbekannt',
     });
+  }
+
+  Future<void> markMentionsSeen(String circleId) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    await _firestore.collection('users').doc(user.uid).set(
+      {'circlesWithMentions': FieldValue.arrayRemove([circleId])},
+      SetOptions(merge: true),
+    );
   }
 
   Future<void> sendWidgetMessage(
@@ -203,6 +235,29 @@ class ChatService {
     if (newData == null || newData is! Map) return state;
     if (jsonEncode(newData).length > 10240) return state;
     return Map<String, dynamic>.from(newData);
+  }
+
+  Future<void> deleteMessage(String circleId, String messageId) async {
+    await _firestore
+        .collection('circles')
+        .doc(circleId)
+        .collection('messages')
+        .doc(messageId)
+        .delete();
+  }
+
+  Future<void> deleteMessages(String circleId, List<String> messageIds) async {
+    final batch = _firestore.batch();
+    for (final id in messageIds) {
+      batch.delete(
+        _firestore
+            .collection('circles')
+            .doc(circleId)
+            .collection('messages')
+            .doc(id),
+      );
+    }
+    await batch.commit();
   }
 
   Future<List<ChatMessage>> loadMoreMessages(

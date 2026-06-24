@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -20,11 +21,13 @@ class _TopCircleAvatar extends StatelessWidget {
   final Circle circle;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
+  final bool hasMention;
 
   const _TopCircleAvatar({
     required this.circle,
     required this.onTap,
     required this.onLongPress,
+    this.hasMention = false,
   });
 
   @override
@@ -41,34 +44,58 @@ class _TopCircleAvatar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFFC5CAE9),
-                  width: 2.5,
-                ),
-              ),
-              child: ClipOval(
-                child: imageBytes != null
-                    ? Image.memory(imageBytes, fit: BoxFit.cover)
-                    : Container(
-                        color: const Color(0xFFFF9966),
-                        alignment: Alignment.center,
-                        child: Text(
-                          circle.name.isNotEmpty
-                              ? circle.name[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+            Stack(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: hasMention
+                          ? Colors.red
+                          : const Color(0xFFC5CAE9),
+                      width: hasMention ? 2.5 : 2.5,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: imageBytes != null
+                        ? Image.memory(imageBytes, fit: BoxFit.cover)
+                        : Container(
+                            color: const Color(0xFFFF9966),
+                            alignment: Alignment.center,
+                            child: Text(
+                              circle.name.isNotEmpty
+                                  ? circle.name[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
+                  ),
+                ),
+                if (hasMention)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
                       ),
-              ),
+                      child: const Icon(
+                        Icons.alternate_email,
+                        color: Colors.white,
+                        size: 11,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(
@@ -92,15 +119,37 @@ class _MyCirclesState extends State<MyCircles> {
   bool _isLoading = true;
   String? _error;
   String _searchQuery = '';
+  Set<String> _circlesWithMentions = {};
+  StreamSubscription<DocumentSnapshot>? _mentionSub;
 
   @override
   void initState() {
     super.initState();
     _loadCircles();
+    _listenForMentions();
+  }
+
+  void _listenForMentions() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    _mentionSub = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((doc) {
+      if (mounted) {
+        setState(() {
+          _circlesWithMentions = Set<String>.from(
+            (doc.data()?['circlesWithMentions'] as List<dynamic>?) ?? [],
+          );
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _mentionSub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -582,6 +631,23 @@ class _MyCirclesState extends State<MyCircles> {
                     right: 12,
                     child: Icon(Icons.star, color: Colors.black, size: 20),
                   ),
+                if (_circlesWithMentions.contains(circle.id))
+                  Positioned(
+                    top: 10,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.alternate_email,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -611,6 +677,7 @@ class _MyCirclesState extends State<MyCircles> {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (_, i) => _TopCircleAvatar(
               circle: pinned[i],
+              hasMention: _circlesWithMentions.contains(pinned[i].id),
               onTap: () async {
                 await Navigator.push(
                   context,

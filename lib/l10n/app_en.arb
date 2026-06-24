@@ -361,6 +361,8 @@
   "noMessages": "No messages yet",
   "beFirst": "Be the first to write something!",
   "writeMessage": "Write a message...",
+  "replyTo": "Reply to",
+  "cannotDeleteOthersMessages": "You can only delete your own messages.",
 
   "settingsTitle": "Settings",
   "editProfile": "Edit Profile",
