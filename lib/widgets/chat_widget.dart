@@ -4,6 +4,7 @@ import 'package:orbit/l10n/app_localizations.dart';
 import '../models/chat_message_model.dart';
 import '../services/chat_service.dart';
 import '../widgets/user_badges.dart';
+import '../screens/user_profile_screen.dart';
 import 'dart:convert';
 
 class ChatWidget extends StatefulWidget {
@@ -290,7 +291,7 @@ class _MessageBubble extends StatelessWidget {
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
         children: [
-          if (!isOwnMessage) ...[_buildAvatar(), const SizedBox(width: 8)],
+          if (!isOwnMessage) ...[_buildAvatar(context), const SizedBox(width: 8)],
           Flexible(
             child: Column(
               crossAxisAlignment: isOwnMessage
@@ -298,19 +299,22 @@ class _MessageBubble extends StatelessWidget {
                   : CrossAxisAlignment.start,
               children: [
                 if (!isOwnMessage) ...[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        message.senderName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
+                  GestureDetector(
+                    onTap: () => openUserProfile(context, message.senderId),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          message.senderName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      UserBadgesRow(badges: message.senderBadges, size: 12),
-                    ],
+                        UserBadgesRow(badges: message.senderBadges, size: 12),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 2),
                 ],
@@ -360,16 +364,17 @@ class _MessageBubble extends StatelessWidget {
               ],
             ),
           ),
-          if (isOwnMessage) ...[const SizedBox(width: 8), _buildAvatar()],
+          if (isOwnMessage) ...[const SizedBox(width: 8), _buildAvatar(context)],
         ],
       ),
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(BuildContext context) {
+    Widget avatar;
     if (message.senderProfileImageBase64 != null &&
         message.senderProfileImageBase64!.isNotEmpty) {
-      return CircleAvatar(
+      avatar = CircleAvatar(
         radius: 16,
         backgroundImage: MemoryImage(
           base64Decode(message.senderProfileImageBase64!),
@@ -377,16 +382,20 @@ class _MessageBubble extends StatelessWidget {
       );
     } else if (message.senderProfileImageUrl != null &&
         message.senderProfileImageUrl!.isNotEmpty) {
-      return CircleAvatar(
+      avatar = CircleAvatar(
         radius: 16,
         backgroundImage: NetworkImage(message.senderProfileImageUrl!),
       );
     } else {
-      return CircleAvatar(
+      avatar = CircleAvatar(
         radius: 16,
         backgroundColor: Colors.grey[300],
         child: Icon(Icons.person, size: 16, color: Colors.grey[600]),
       );
     }
+    return GestureDetector(
+      onTap: () => openUserProfile(context, message.senderId),
+      child: avatar,
+    );
   }
 }

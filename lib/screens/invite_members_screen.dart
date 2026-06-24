@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/l10n/app_localizations.dart';
 import '../models/invite_model.dart';
 import '../widgets/user_badges.dart';
+import 'user_profile_screen.dart';
 
 class InviteMembersScreen extends StatefulWidget {
   final String circleId;
@@ -289,11 +290,23 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
               Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
-                  leading: _buildUserAvatar(_foundUser!),
-                  title: nameWithBadges(
-                    _foundUser!['displayName'] as String? ?? '',
-                    badges: List<String>.from(_foundUser!['badges'] ?? []),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  leading: GestureDetector(
+                    onTap: () => openUserProfile(
+                      context,
+                      _foundUser!['uid'] as String,
+                    ),
+                    child: _buildUserAvatar(_foundUser!),
+                  ),
+                  title: GestureDetector(
+                    onTap: () => openUserProfile(
+                      context,
+                      _foundUser!['uid'] as String,
+                    ),
+                    child: nameWithBadges(
+                      _foundUser!['displayName'] as String? ?? '',
+                      badges: List<String>.from(_foundUser!['badges'] ?? []),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                   trailing: FilledButton(
                     onPressed: _isSending ? null : _sendInvite,
@@ -337,13 +350,22 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
                             final invite = _invites[index];
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
-                              leading: _buildUserAvatar({
-                                'profileImageBase64':
-                                    invite.invitedProfileImageBase64,
-                                'profileImageUrl': invite.invitedProfileImageUrl,
-                              }),
+                              leading: GestureDetector(
+                                onTap: () => openUserProfile(
+                                  context,
+                                  invite.invitedUserId,
+                                ),
+                                child: _buildUserAvatar({
+                                  'profileImageBase64':
+                                      invite.invitedProfileImageBase64,
+                                  'profileImageUrl':
+                                      invite.invitedProfileImageUrl,
+                                }),
+                              ),
                               title: Text(invite.invitedDisplayName),
                               trailing: _buildStatusChip(invite.status, l10n),
+                              onTap: () =>
+                                  openUserProfile(context, invite.invitedUserId),
                             );
                           },
                         ),

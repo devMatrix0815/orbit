@@ -329,6 +329,30 @@ class AppLocalizationsDe extends AppLocalizations {
       'Fehler beim Ändern des Profilbildes.';
 
   @override
+  String get biography => 'Biografie';
+
+  @override
+  String get bioHint => 'Schreib ein paar Zeilen über dich...';
+
+  @override
+  String get links => 'Links';
+
+  @override
+  String get link1Hint => 'Link 1 (z.B. https://instagram.com/...)';
+
+  @override
+  String get link2Hint => 'Link 2 (z.B. https://github.com/...)';
+
+  @override
+  String get editBioAndLinks => 'Bio & Links bearbeiten';
+
+  @override
+  String get noBio => 'Noch keine Biografie hinzugefügt.';
+
+  @override
+  String get errorSavingBio => 'Fehler beim Speichern.';
+
+  @override
   String get errorJoining => 'Fehler beim Beitreten.';
 
   @override

@@ -326,6 +326,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorChangingProfilePicture => 'Error changing profile picture.';
 
   @override
+  String get biography => 'Biography';
+
+  @override
+  String get bioHint => 'Write a few lines about yourself...';
+
+  @override
+  String get links => 'Links';
+
+  @override
+  String get link1Hint => 'Link 1 (e.g. https://instagram.com/...)';
+
+  @override
+  String get link2Hint => 'Link 2 (e.g. https://github.com/...)';
+
+  @override
+  String get editBioAndLinks => 'Edit Bio & Links';
+
+  @override
+  String get noBio => 'No biography added yet.';
+
+  @override
+  String get errorSavingBio => 'Error saving.';
+
+  @override
   String get errorJoining => 'Error joining.';
 
   @override

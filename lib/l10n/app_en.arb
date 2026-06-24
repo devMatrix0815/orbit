@@ -189,6 +189,14 @@
 
   "myProfile": "My Profile",
   "errorChangingProfilePicture": "Error changing profile picture.",
+  "biography": "Biography",
+  "bioHint": "Write a few lines about yourself...",
+  "links": "Links",
+  "link1Hint": "Link 1 (e.g. https://instagram.com/...)",
+  "link2Hint": "Link 2 (e.g. https://github.com/...)",
+  "editBioAndLinks": "Edit Bio & Links",
+  "noBio": "No biography added yet.",
+  "errorSavingBio": "Error saving.",
 
   "errorJoining": "Error joining.",
   "requestSentSuccess": "Request sent!",
