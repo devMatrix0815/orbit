@@ -298,24 +298,23 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 children: kAllInterests.map((interest) {
                   final selected = _selectedInterests.contains(interest);
                   return FilterChip(
-                    backgroundColor: const Color.fromARGB(255, 238, 238, 238),
                     showCheckmark: false,
-                    selectedColor: const Color(0xFFEEF0FB),
                     label: Text(getInterestName(interest, l10n)),
                     selected: selected,
                     color: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.pressed)) {
-                        return selected
-                            ? const Color(0xFFEEF0FB)
-                            : const Color.fromARGB(255, 238, 238, 238);
-                      }
                       if (states.contains(WidgetState.selected)) {
-                        return const Color(0xFFEEF0FB);
+                        return Theme.of(context).colorScheme.primary.withValues(alpha: 0.15);
                       }
-                      return const Color.fromARGB(255, 238, 238, 238);
+                      return Theme.of(context).colorScheme.surfaceContainerHighest;
                     }),
+                    labelStyle: TextStyle(
+                      color: selected
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                    ),
                     side: selected
-                        ? const BorderSide(color: Color(0xFFC5CAE9), width: 1.5)
+                        ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)
                         : BorderSide.none,
                     onSelected: (val) {
                       setState(() {

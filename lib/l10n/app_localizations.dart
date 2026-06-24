@@ -914,6 +914,12 @@ abstract class AppLocalizations {
   /// **'Fehler beim Speichern.'**
   String get errorSaving;
 
+  /// No description provided for @previewDiscoverPage.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorschau (Entdecken-Seite)'**
+  String get previewDiscoverPage;
+
   /// No description provided for @bannedMembers.
   ///
   /// In de, this message translates to:

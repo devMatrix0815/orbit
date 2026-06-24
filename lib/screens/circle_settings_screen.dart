@@ -7,6 +7,7 @@ import 'package:orbit/l10n/app_localizations.dart';
 import '../models/circle_model.dart';
 import '../constants/interests.dart';
 import '../widgets/user_badges.dart';
+import 'circle_detail_screen.dart';
 
 class CircleSettingsScreen extends StatefulWidget {
   final Circle circle;
@@ -379,15 +380,12 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
                       runSpacing: 8,
                       children: _tags.map((tag) {
                         return Chip(
-                          backgroundColor: const Color.fromARGB(
-                            255,
-                            238,
-                            238,
-                            238,
-                          ),
+                          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                           label: Text(
                             getInterestName(tag, l10n),
-                            style: const TextStyle(color: Colors.black),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                           side: BorderSide.none,
                         );
@@ -438,6 +436,42 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
               title: Text(l10n.bannedMembers),
               trailing: const Icon(Icons.chevron_right),
               onTap: _showBannedSheet,
+            ),
+
+            const Divider(),
+
+            ListTile(
+              leading: const Icon(Icons.preview_outlined),
+              title: Text(l10n.previewDiscoverPage),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                final previewCircle = Circle(
+                  id: widget.circle.id,
+                  name: _name,
+                  createdBy: widget.circle.createdBy,
+                  members: widget.circle.members,
+                  memberCount: widget.circle.memberCount,
+                  createdAt: widget.circle.createdAt,
+                  imageBase64: _imageBytes != null
+                      ? base64Encode(_imageBytes!)
+                      : widget.circle.imageBase64,
+                  tags: _tags,
+                  description: widget.circle.description,
+                  imageUrl: widget.circle.imageUrl,
+                  operators: widget.circle.operators,
+                  banned: widget.circle.banned,
+                  joinMode: _joinMode,
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CircleDetailScreen(
+                      circle: previewCircle,
+                      previewMode: true,
+                    ),
+                  ),
+                );
+              },
             ),
 
             const Divider(),
@@ -703,20 +737,23 @@ class _InterestsSheetState extends State<_InterestsSheet> {
                 children: kAllInterests.map((tag) {
                   final selected = _selected.contains(tag);
                   return FilterChip(
-                    backgroundColor:
-                        const Color.fromARGB(255, 238, 238, 238),
                     showCheckmark: false,
-                    selectedColor: const Color(0xFFEEF0FB),
                     label: Text(getInterestName(tag, l10n)),
                     selected: selected,
+                    color: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Theme.of(context).colorScheme.primary.withValues(alpha: 0.15);
+                      }
+                      return Theme.of(context).colorScheme.surfaceContainerHighest;
+                    }),
                     labelStyle: TextStyle(
                       color: selected
-                          ? const Color.fromARGB(255, 83, 52, 141)
-                          : Colors.black,
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                     ),
                     side: selected
-                        ? const BorderSide(
-                            color: Color(0xFFC5CAE9), width: 1.5)
+                        ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)
                         : BorderSide.none,
                     onSelected: (val) {
                       setState(() {

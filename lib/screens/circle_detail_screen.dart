@@ -11,8 +11,13 @@ import '../widgets/user_badges.dart';
 
 class CircleDetailScreen extends StatefulWidget {
   final Circle circle;
+  final bool previewMode;
 
-  const CircleDetailScreen({super.key, required this.circle});
+  const CircleDetailScreen({
+    super.key,
+    required this.circle,
+    this.previewMode = false,
+  });
 
   @override
   State<CircleDetailScreen> createState() => _CircleDetailScreenState();
@@ -229,7 +234,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     final isMember = widget.circle.members.contains(currentUid);
     final isCreator = currentUid == widget.circle.createdBy;
 
-    if (!isMember) {
+    if (!isMember || widget.previewMode) {
       return _buildNonMemberView(context);
     }
 
@@ -400,6 +405,37 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                       l10n.memberCount(circle.memberCount),
                       style: const TextStyle(color: Colors.grey),
                     ),
+                    const SizedBox(width: 12),
+                    Icon(
+                      circle.joinMode == 'open'
+                          ? Icons.lock_open_outlined
+                          : circle.joinMode == 'request'
+                              ? Icons.how_to_reg_outlined
+                              : Icons.lock_outlined,
+                      size: 14,
+                      color: circle.joinMode == 'open'
+                          ? Colors.green
+                          : circle.joinMode == 'request'
+                              ? Colors.orange
+                              : Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      circle.joinMode == 'open'
+                          ? l10n.open
+                          : circle.joinMode == 'request'
+                              ? l10n.requestMode
+                              : l10n.private,
+                      style: TextStyle(
+                        color: circle.joinMode == 'open'
+                            ? Colors.green
+                            : circle.joinMode == 'request'
+                                ? Colors.orange
+                                : Colors.grey,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
                 if (circle.description.isNotEmpty) ...[
@@ -414,8 +450,11 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                     children: circle.tags
                         .map((tag) => Chip(
                               label: Text(tag,
-                                  style: const TextStyle(fontSize: 12)),
-                              backgroundColor: Colors.grey[100],
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  )),
+                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                               side: BorderSide.none,
                             ))
                         .toList(),

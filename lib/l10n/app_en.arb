@@ -259,6 +259,7 @@
   "private": "Private",
   "privateSubtitle": "Invite only – not visible in Discover",
   "errorSaving": "Error saving.",
+  "previewDiscoverPage": "Preview (Discover page)",
   "bannedMembers": "Banned Members",
   "deleteGroup": "Delete Group",
 

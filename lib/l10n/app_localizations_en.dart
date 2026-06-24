@@ -455,6 +455,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorSaving => 'Error saving.';
 
   @override
+  String get previewDiscoverPage => 'Preview (Discover page)';
+
+  @override
   String get bannedMembers => 'Banned Members';
 
   @override
