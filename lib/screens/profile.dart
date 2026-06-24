@@ -350,15 +350,12 @@ class _ProfileState extends State<Profile> {
                       runSpacing: 8,
                       children: _interests.map((interest) {
                         return Chip(
-                          backgroundColor: const Color.fromARGB(
-                            255,
-                            238,
-                            238,
-                            238,
-                          ),
+                          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                           label: Text(
                             getInterestName(interest, l10n),
-                            style: const TextStyle(color: Colors.black),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                           side: BorderSide.none,
                         );
@@ -425,18 +422,23 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
                 children: kAllInterests.map((interest) {
                   final selected = _selected.contains(interest);
                   return FilterChip(
-                    backgroundColor: const Color.fromARGB(255, 238, 238, 238),
                     showCheckmark: false,
-                    selectedColor: const Color(0xFFEEF0FB),
                     label: Text(getInterestName(interest, l10n)),
                     selected: selected,
+                    color: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Theme.of(context).colorScheme.primary.withValues(alpha: 0.15);
+                      }
+                      return Theme.of(context).colorScheme.surfaceContainerHighest;
+                    }),
                     labelStyle: TextStyle(
                       color: selected
-                          ? const Color.fromARGB(255, 83, 52, 141)
-                          : Colors.black,
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                     ),
                     side: selected
-                        ? const BorderSide(color: Color(0xFFC5CAE9), width: 1.5)
+                        ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)
                         : BorderSide.none,
                     onSelected: (val) {
                       setState(() {

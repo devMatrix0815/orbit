@@ -190,7 +190,9 @@ class _DiscoverState extends State<Discover> {
               child: Icon(
                 icon,
                 size: 28,
-                color: isSelected ? Colors.white : Colors.black87,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Colors.black87,
               ),
             ),
             const SizedBox(height: 6),
@@ -202,7 +204,9 @@ class _DiscoverState extends State<Discover> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? primaryColor : Colors.black87,
+                color: isSelected
+                    ? primaryColor
+                    : Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -230,11 +234,11 @@ class _DiscoverState extends State<Discover> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -335,13 +339,18 @@ class _DiscoverState extends State<Discover> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.grey[300]!),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+                          ),
                         ),
                         child: Text(
                           getInterestName(tag, l10n),
-                          style: const TextStyle(fontSize: 10),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
                       ),
                     )
@@ -385,8 +394,9 @@ class _DiscoverState extends State<Discover> {
                             controller: _searchController,
                             hintText: l10n.searchGroups,
                             elevation: const WidgetStatePropertyAll(0),
-                            backgroundColor:
-                                WidgetStatePropertyAll(Colors.grey[100]),
+                            backgroundColor: WidgetStatePropertyAll(
+                              Theme.of(context).colorScheme.surfaceContainerHighest,
+                            ),
                             constraints: const BoxConstraints(
                                 minHeight: 48, maxHeight: 48),
                             shape: WidgetStatePropertyAll(
@@ -401,8 +411,8 @@ class _DiscoverState extends State<Discover> {
                               _searchQuery = v;
                               _showAll = false;
                             }),
-                            leading: const Icon(Icons.search,
-                                color: Colors.grey),
+                            leading: Icon(Icons.search,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -414,14 +424,14 @@ class _DiscoverState extends State<Discover> {
                             decoration: BoxDecoration(
                               color: _selectedTag != null
                                   ? primaryColor
-                                  : Colors.grey[100],
+                                  : Theme.of(context).colorScheme.surfaceContainerHighest,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.tune,
                               color: _selectedTag != null
-                                  ? Colors.white
-                                  : Colors.grey[700],
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),

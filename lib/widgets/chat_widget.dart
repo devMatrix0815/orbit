@@ -183,10 +183,10 @@ class _ChatWidgetState extends State<ChatWidget> {
 
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: Colors.black.withValues(alpha: 0.12),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -198,14 +198,16 @@ class _ChatWidgetState extends State<ChatWidget> {
               Expanded(
                 child: TextField(
                   controller: _messageController,
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   decoration: InputDecoration(
                     hintText: l10n.writeMessage,
+                    hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
@@ -225,15 +227,17 @@ class _ChatWidgetState extends State<ChatWidget> {
                 ),
                 child: IconButton(
                   icon: _isSending
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 24,
                           width: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         )
-                      : const Icon(Icons.send, color: Colors.white, size: 24),
+                      : Icon(Icons.send,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          size: 24),
                   onPressed: _isSending ? null : _sendMessage,
                 ),
               ),
@@ -318,7 +322,7 @@ class _MessageBubble extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isOwnMessage
                         ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[200],
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16).copyWith(
                       bottomLeft: isOwnMessage
                           ? const Radius.circular(16)
@@ -334,8 +338,9 @@ class _MessageBubble extends StatelessWidget {
                       Text(
                         message.text,
                         style: TextStyle(
-                          color:
-                              isOwnMessage ? Colors.white : Colors.black87,
+                          color: isOwnMessage
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onSurface,
                           fontSize: 14,
                         ),
                       ),
@@ -345,8 +350,8 @@ class _MessageBubble extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 10,
                           color: isOwnMessage
-                              ? Colors.white.withValues(alpha: 0.7)
-                              : Colors.grey[600],
+                              ? Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.6)
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],

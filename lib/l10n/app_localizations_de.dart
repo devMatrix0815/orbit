@@ -458,6 +458,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get errorSaving => 'Fehler beim Speichern.';
 
   @override
+  String get previewDiscoverPage => 'Vorschau (Entdecken-Seite)';
+
+  @override
   String get bannedMembers => 'Gebannte Mitglieder';
 
   @override
