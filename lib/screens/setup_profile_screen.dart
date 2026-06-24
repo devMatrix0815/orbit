@@ -314,8 +314,11 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                     ),
                     side: selected
-                        ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)
-                        : BorderSide.none,
+                        ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
+                        : BorderSide(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                            width: 1,
+                          ),
                     onSelected: (val) {
                       setState(() {
                         if (val) {

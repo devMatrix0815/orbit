@@ -197,7 +197,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  side: BorderSide.none,
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                    width: 1,
+                  ),
                 );
               }).toList(),
             ),

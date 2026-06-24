@@ -473,7 +473,10 @@ class _ProfileState extends State<Profile> {
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
-                          side: BorderSide.none,
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                            width: 1,
+                          ),
                         );
                       }).toList(),
                     ),
@@ -694,8 +697,11 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
                       fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                     ),
                     side: selected
-                        ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5)
-                        : BorderSide.none,
+                        ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
+                        : BorderSide(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                            width: 1,
+                          ),
                     onSelected: (val) {
                       setState(() {
                         if (val) {
