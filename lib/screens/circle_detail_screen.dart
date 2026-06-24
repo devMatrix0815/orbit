@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 import '../models/circle_model.dart';
 import 'invite_members_screen.dart';
 import '../widgets/chat_widget.dart';
 import 'circle_settings_screen.dart';
 import '../widgets/user_badges.dart';
 
-// circle detail screen with options menu
 class CircleDetailScreen extends StatefulWidget {
   final Circle circle;
 
@@ -63,7 +63,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
       if (mounted) {
         setState(() => _joinLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Beitreten.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorJoining)),
         );
       }
     }
@@ -72,6 +72,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
   Future<void> _sendJoinRequest() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _requestLoading = true);
     try {
       final userDoc = await FirebaseFirestore.instance
@@ -89,7 +90,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
             : null,
         'requestingUserId': currentUser.uid,
         'requestingDisplayName':
-            userData['displayName'] ?? currentUser.displayName ?? 'Unbekannt',
+            userData['displayName'] ?? currentUser.displayName ?? l10n.unknown,
         'requestingUserImageBase64': userData['profileImageBase64'],
         'requestingUserImageUrl': userData['profileImageUrl'],
         'requestedAt': FieldValue.serverTimestamp(),
@@ -99,14 +100,14 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
       if (mounted) setState(() => _requestSent = true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Anfrage gesendet!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.requestSentSuccess)),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _requestLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Senden der Anfrage.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorSendingRequest)),
         );
       }
     } finally {
@@ -114,25 +115,25 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     }
   }
 
-  // leave group with confirmation dialog
   Future<void> _leaveGroup() async {
+    final l10n = AppLocalizations.of(context)!;
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     if (currentUid == null) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Gruppe verlassen'),
-        content: Text('Möchtest du "$_circleName" wirklich verlassen?'),
+        title: Text(l10n.leaveGroup),
+        content: Text(l10n.confirmLeave(_circleName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Abbrechen'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Verlassen'),
+            child: Text(l10n.leave),
           ),
         ],
       ),
@@ -152,13 +153,12 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Verlassen der Gruppe.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorLeavingGroup)),
         );
       }
     }
   }
 
-  // open invite members screen
   void _openInviteScreen() {
     Navigator.push(
       context,
@@ -176,7 +176,6 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     );
   }
 
-  // open circle settings and handle return values
   Future<void> _openSettingsScreen() async {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
@@ -195,18 +194,15 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
     }
   }
 
-  // show members bottom sheet
   Future<void> _showMembersSheet() async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
     final isCreator = currentUid == widget.circle.createdBy;
 
-    // fresh member list from firestore
     final doc = await FirebaseFirestore.instance
         .collection('circles')
         .doc(widget.circle.id)
         .get();
     final memberUids = List<String>.from(doc.data()?['members'] ?? []);
-
     final operatorUids = Set<String>.from(doc.data()?['operators'] ?? []);
 
     if (!mounted) return;
@@ -255,64 +251,70 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                   _leaveGroup();
               }
             },
-            itemBuilder: (context) => isCreator
-                ? [
-                    const PopupMenuItem(
-                      value: 'members',
-                      child: ListTile(
-                        leading: Icon(Icons.people_outline),
-                        title: Text('Mitglieder'),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'invites',
-                      child: ListTile(
-                        leading: Icon(Icons.person_add_outlined),
-                        title: Text('Leute einladen'),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'settings',
-                      child: ListTile(
-                        leading: Icon(Icons.settings_outlined),
-                        title: Text('Einstellungen'),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ]
-                : [
-                    const PopupMenuItem(
-                      value: 'members',
-                      child: ListTile(
-                        leading: Icon(Icons.people_outline),
-                        title: Text('Mitglieder'),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'leave',
-                      child: ListTile(
-                        leading: Icon(Icons.exit_to_app, color: Colors.red),
-                        title: Text(
-                          'Gruppe verlassen',
-                          style: TextStyle(color: Colors.red),
+            itemBuilder: (context) {
+              final l = AppLocalizations.of(context)!;
+              return isCreator
+                  ? [
+                      PopupMenuItem(
+                        value: 'members',
+                        child: ListTile(
+                          leading: const Icon(Icons.people_outline),
+                          title: Text(l.members),
+                          contentPadding: EdgeInsets.zero,
                         ),
-                        contentPadding: EdgeInsets.zero,
                       ),
-                    ),
-                  ],
+                      PopupMenuItem(
+                        value: 'invites',
+                        child: ListTile(
+                          leading: const Icon(Icons.person_add_outlined),
+                          title: Text(l.invitePeople),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'settings',
+                        child: ListTile(
+                          leading: const Icon(Icons.settings_outlined),
+                          title: Text(l.settings),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ]
+                  : [
+                      PopupMenuItem(
+                        value: 'members',
+                        child: ListTile(
+                          leading: const Icon(Icons.people_outline),
+                          title: Text(l.members),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'leave',
+                        child: ListTile(
+                          leading: const Icon(Icons.exit_to_app,
+                              color: Colors.red),
+                          title: Text(
+                            l.leaveGroup,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ];
+            },
           ),
         ],
       ),
       body: SizedBox.expand(
-        child: ChatWidget(circleId: widget.circle.id, circleName: _circleName),
+        child:
+            ChatWidget(circleId: widget.circle.id, circleName: _circleName),
       ),
     );
   }
 
   Widget _buildNonMemberView(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final circle = widget.circle;
     final imageBytes =
         circle.imageBase64 != null ? base64Decode(circle.imageBase64!) : null;
@@ -326,7 +328,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
             : FilledButton.icon(
                 onPressed: _joinDirectly,
                 icon: const Icon(Icons.login),
-                label: const Text('Gruppe beitreten'),
+                label: Text(l10n.joinGroup),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(double.infinity, 52),
                 ),
@@ -336,7 +338,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
           joinButton = OutlinedButton.icon(
             onPressed: null,
             icon: const Icon(Icons.hourglass_top_outlined),
-            label: const Text('Anfrage gesendet'),
+            label: Text(l10n.requestSent),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),
             ),
@@ -347,7 +349,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
               : FilledButton.icon(
                   onPressed: _sendJoinRequest,
                   icon: const Icon(Icons.how_to_reg_outlined),
-                  label: const Text('Beitrittsanfrage senden'),
+                  label: Text(l10n.sendJoinRequest),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(double.infinity, 52),
                   ),
@@ -357,7 +359,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
         joinButton = OutlinedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.lock_outline),
-          label: const Text('Nur auf Einladung'),
+          label: Text(l10n.inviteOnly),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(double.infinity, 52),
           ),
@@ -368,7 +370,6 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
       appBar: AppBar(title: Text(_circleName)),
       body: ListView(
         children: [
-          // header image
           SizedBox(
             height: 220,
             child: imageBytes != null
@@ -396,7 +397,7 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                     const Icon(Icons.group, size: 16, color: Colors.grey),
                     const SizedBox(width: 4),
                     Text(
-                      '${circle.memberCount} Mitglieder',
+                      l10n.memberCount(circle.memberCount),
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],
@@ -412,7 +413,8 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                     runSpacing: 6,
                     children: circle.tags
                         .map((tag) => Chip(
-                              label: Text(tag, style: const TextStyle(fontSize: 12)),
+                              label: Text(tag,
+                                  style: const TextStyle(fontSize: 12)),
                               backgroundColor: Colors.grey[100],
                               side: BorderSide.none,
                             ))
@@ -430,7 +432,6 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
   }
 }
 
-// members bottom sheet
 class _MembersSheet extends StatefulWidget {
   final String circleId;
   final String creatorUid;
@@ -487,7 +488,6 @@ class _MembersSheetState extends State<_MembersSheet> {
         return {'uid': doc.id, ...data};
       }).toList();
 
-      // creator first, operators second, then alphabetical
       _members.sort((a, b) {
         if (a['uid'] == _creatorUid) return -1;
         if (b['uid'] == _creatorUid) return 1;
@@ -506,9 +506,9 @@ class _MembersSheetState extends State<_MembersSheet> {
       uid != widget.currentUid && uid != _creatorUid;
 
   void _exitSelection() => setState(() {
-    _selectionMode = false;
-    _selected.clear();
-  });
+        _selectionMode = false;
+        _selected.clear();
+      });
 
   Future<void> _removeSelected() async {
     setState(() => _isBusy = true);
@@ -530,9 +530,10 @@ class _MembersSheetState extends State<_MembersSheet> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Fehler beim Entfernen.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.errorRemoving)),
+        );
       }
     } finally {
       if (mounted) setState(() => _isBusy = false);
@@ -557,7 +558,9 @@ class _MembersSheetState extends State<_MembersSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Ändern der Rolle.')),
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.errorChangingRole)),
         );
       }
     } finally {
@@ -583,7 +586,9 @@ class _MembersSheetState extends State<_MembersSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Ändern der Rolle.')),
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.errorChangingRole)),
         );
       }
     } finally {
@@ -592,27 +597,26 @@ class _MembersSheetState extends State<_MembersSheet> {
   }
 
   Future<void> _banSelected() async {
+    final l10n = AppLocalizations.of(context)!;
     final count = _selected.length;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(
-          count == 1 ? 'Mitglied bannen?' : '$count Mitglieder bannen?',
-        ),
+        title: Text(count == 1 ? l10n.banMember : l10n.banMembers(count)),
         content: Text(
           count == 1
-              ? 'Diese Person wird entfernt und kann der Gruppe nicht mehr beitreten.'
-              : '$count Personen werden entfernt und können der Gruppe nicht mehr beitreten.',
+              ? l10n.banConfirmSingle
+              : l10n.banConfirmMultiple(count),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Abbrechen'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Bannen'),
+            child: Text(l10n.ban),
           ),
         ],
       ),
@@ -639,9 +643,10 @@ class _MembersSheetState extends State<_MembersSheet> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Fehler beim Bannen.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.errorBanning)),
+        );
       }
     } finally {
       if (mounted) setState(() => _isBusy = false);
@@ -649,26 +654,25 @@ class _MembersSheetState extends State<_MembersSheet> {
   }
 
   Future<void> _transferAdmin() async {
+    final l10n = AppLocalizations.of(context)!;
     final uid = _selected.first;
     final memberData = _members.firstWhere((m) => m['uid'] == uid);
-    final name = memberData['displayName'] as String? ?? 'dieses Mitglied';
+    final name = memberData['displayName'] as String? ?? l10n.unknown;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Admin übertragen'),
-        content: Text(
-          '$name wird zum neuen Admin. Du verlierst deine Admin-Rechte und wirst normales Mitglied.',
-        ),
+        title: Text(l10n.transferAdminTitle),
+        content: Text(l10n.transferAdminConfirm(name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Abbrechen'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Übertragen'),
+            child: Text(l10n.transfer),
           ),
         ],
       ),
@@ -704,7 +708,9 @@ class _MembersSheetState extends State<_MembersSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Übertragen.')),
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.errorTransferring)),
         );
       }
     } finally {
@@ -728,7 +734,8 @@ class _MembersSheetState extends State<_MembersSheet> {
     } else if (url != null && url.isNotEmpty) {
       avatar = CircleAvatar(backgroundImage: NetworkImage(url));
     } else {
-      avatar = const CircleAvatar(child: Icon(Icons.person_outline, size: 20));
+      avatar =
+          const CircleAvatar(child: Icon(Icons.person_outline, size: 20));
     }
 
     if (!_selectionMode || !selectable) return avatar;
@@ -752,7 +759,6 @@ class _MembersSheetState extends State<_MembersSheet> {
     );
   }
 
-  // single icon-button entry for the action toolbar
   Widget _buildAction({
     required IconData icon,
     required String label,
@@ -787,6 +793,7 @@ class _MembersSheetState extends State<_MembersSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final singleSelected = _selected.length == 1 ? _selected.first : null;
     final singleIsOperator =
         singleSelected != null && _operators.contains(singleSelected);
@@ -794,7 +801,6 @@ class _MembersSheetState extends State<_MembersSheet> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // drag handle
         const SizedBox(height: 8),
         Container(
           width: 36,
@@ -806,14 +812,13 @@ class _MembersSheetState extends State<_MembersSheet> {
         ),
         const SizedBox(height: 16),
 
-        // header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
               if (_selectionMode) ...[
                 Text(
-                  '${_selected.length} ausgewählt',
+                  l10n.selectedCount(_selected.length),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -822,11 +827,11 @@ class _MembersSheetState extends State<_MembersSheet> {
                 const Spacer(),
                 TextButton(
                   onPressed: _exitSelection,
-                  child: const Text('Abbrechen'),
+                  child: Text(l10n.cancel),
                 ),
               ] else
                 Text(
-                  'Mitglieder (${_members.length})',
+                  l10n.membersWithCount(_members.length),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -837,7 +842,6 @@ class _MembersSheetState extends State<_MembersSheet> {
         ),
         const SizedBox(height: 8),
 
-        // member list
         if (_isLoading)
           const Padding(
             padding: EdgeInsets.all(32),
@@ -854,46 +858,52 @@ class _MembersSheetState extends State<_MembersSheet> {
               itemBuilder: (context, index) {
                 final member = _members[index];
                 final uid = member['uid'] as String;
-                final name = member['displayName'] as String? ?? 'Unbekannt';
-                final badges = List<String>.from(member['badges'] ?? []);
+                final name =
+                    member['displayName'] as String? ?? l10n.unknown;
+                final badges =
+                    List<String>.from(member['badges'] ?? []);
                 final isAdmin = uid == _creatorUid;
                 final isOperator = _operators.contains(uid);
                 final isMe = uid == widget.currentUid;
-                final selectable = _isSelectable(uid) && _isSelfAdmin;
+                final selectable =
+                    _isSelectable(uid) && _isSelfAdmin;
                 final isSelected = _selected.contains(uid);
 
                 return GestureDetector(
                   onLongPress: selectable && !_selectionMode
                       ? () => setState(() {
-                          _selectionMode = true;
-                          _selected.add(uid);
-                        })
+                            _selectionMode = true;
+                            _selected.add(uid);
+                          })
                       : null,
                   onTap: _selectionMode && selectable
                       ? () => setState(() {
-                          if (isSelected) {
-                            _selected.remove(uid);
-                            if (_selected.isEmpty) _selectionMode = false;
-                          } else {
-                            _selected.add(uid);
-                          }
-                        })
+                            if (isSelected) {
+                              _selected.remove(uid);
+                              if (_selected.isEmpty) _selectionMode = false;
+                            } else {
+                              _selected.add(uid);
+                            }
+                          })
                       : null,
                   child: ListTile(
                     leading: _buildAvatar(member, isSelected, selectable),
                     title: nameWithBadges(name, badges: badges),
                     subtitle: isAdmin
-                        ? const Text('Admin', style: TextStyle(fontSize: 12))
+                        ? Text(l10n.admin,
+                            style: const TextStyle(fontSize: 12))
                         : isOperator
                         ? Text(
-                            'Operator',
+                            l10n.operator,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Theme.of(context).colorScheme.primary,
+                              color:
+                                  Theme.of(context).colorScheme.primary,
                             ),
                           )
                         : isMe
-                        ? const Text('Du', style: TextStyle(fontSize: 12))
+                        ? Text(l10n.you,
+                            style: const TextStyle(fontSize: 12))
                         : null,
                     selected: isSelected,
                   ),
@@ -902,7 +912,6 @@ class _MembersSheetState extends State<_MembersSheet> {
             ),
           ),
 
-        // action toolbar — shown when selection is active
         if (_selectionMode && _isSelfAdmin && _selected.isNotEmpty) ...[
           const Divider(height: 1),
           Padding(
@@ -913,13 +922,13 @@ class _MembersSheetState extends State<_MembersSheet> {
               children: [
                 _buildAction(
                   icon: Icons.person_remove_outlined,
-                  label: '${_selected.length} entfernen',
+                  label: l10n.removeCount(_selected.length),
                   onTap: _isBusy ? null : _removeSelected,
                   color: Colors.red,
                 ),
                 _buildAction(
                   icon: Icons.block,
-                  label: 'Bannen',
+                  label: l10n.ban,
                   onTap: _isBusy ? null : _banSelected,
                   color: Colors.orange,
                 ),
@@ -927,17 +936,17 @@ class _MembersSheetState extends State<_MembersSheet> {
                   singleIsOperator
                       ? _buildAction(
                           icon: Icons.shield_outlined,
-                          label: 'Operator\nentfernen',
+                          label: l10n.removeOperatorLabel,
                           onTap: _isBusy ? null : _removeOperator,
                         )
                       : _buildAction(
                           icon: Icons.shield,
-                          label: 'Zum Operator\nmachen',
+                          label: l10n.makeOperatorLabel,
                           onTap: _isBusy ? null : _makeOperator,
                         ),
                   _buildAction(
                     icon: Icons.admin_panel_settings_outlined,
-                    label: 'Admin\nübertragen',
+                    label: l10n.transferAdminLabel,
                     onTap: _isBusy ? null : _transferAdmin,
                   ),
                 ],

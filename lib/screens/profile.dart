@@ -4,12 +4,12 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Settings;
+import 'package:orbit/l10n/app_localizations.dart';
 import 'package:orbit/screens/settings.dart';
 import 'package:orbit/services/update_service.dart';
 import '../constants/interests.dart';
 import '../widgets/user_badges.dart';
 
-// profile tab - shows name, avatar and interests
 class Profile extends StatefulWidget {
   const Profile({super.key});
 
@@ -33,7 +33,6 @@ class _ProfileState extends State<Profile> {
     UpdateService.checkInBackground();
   }
 
-  // load profile data from firestore
   Future<void> _loadProfile() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -46,6 +45,7 @@ class _ProfileState extends State<Profile> {
     final data = doc.data();
     if (data == null) return;
 
+    if (!mounted) return;
     setState(() {
       _displayName = data['displayName'] as String? ?? '';
       _age = data['age'] as int?;
@@ -56,7 +56,6 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  // save updated interests to firestore
   Future<void> _saveInterests(List<String> updated) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -65,46 +64,50 @@ class _ProfileState extends State<Profile> {
       'interests': updated,
     });
 
+    if (!mounted) return;
     setState(() => _interests = updated);
   }
 
-  // pick profile image from camera or gallery and save to firestore
   Future<void> _pickProfileImage() async {
     if (_isPickingImage) return;
+    final l10n = AppLocalizations.of(context)!;
 
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) {
+        final l = AppLocalizations.of(context)!;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Kamera'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Galerie'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(l.camera),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(l.gallery),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
 
     if (source == null) return;
@@ -125,11 +128,11 @@ class _ProfileState extends State<Profile> {
         'profileImageBase64': base64,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      setState(() => _profileImageBase64 = base64);
+      if (mounted) setState(() => _profileImageBase64 = base64);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Ändern des Profilbildes.')),
+          SnackBar(content: Text(l10n.errorChangingProfilePicture)),
         );
       }
     } finally {
@@ -137,7 +140,6 @@ class _ProfileState extends State<Profile> {
     }
   }
 
-  // open interests edit sheet
   Future<void> _openAddInterests() async {
     final toAdd = Set<String>.from(_interests);
 
@@ -150,13 +152,12 @@ class _ProfileState extends State<Profile> {
       builder: (ctx) => _AddInterestsSheet(
         current: toAdd,
         onSave: (selected) async {
-          await _saveInterests(selected.toList()); // save
+          await _saveInterests(selected.toList());
         },
       ),
     );
   }
 
-  // avatar with camera overlay - shows base64, google photo or placeholder
   Widget _buildAvatar() {
     final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
     Widget image;
@@ -223,14 +224,14 @@ class _ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Mein Profil',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.myProfile,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-
-        // settings button
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: UpdateService.hasUpdate,
@@ -297,7 +298,7 @@ class _ProfileState extends State<Profile> {
                             if (_age != null) ...[
                               const SizedBox(height: 2),
                               Text(
-                                '$_age Jahre',
+                                l10n.ageYears(_age!),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -312,9 +313,9 @@ class _ProfileState extends State<Profile> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Interessen',
-                        style: TextStyle(
+                      Text(
+                        l10n.interests,
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -327,7 +328,7 @@ class _ProfileState extends State<Profile> {
                         ),
                         onPressed: _openAddInterests,
                         label: Text(
-                          'Bearbeiten',
+                          l10n.edit,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary,
                           ),
@@ -340,7 +341,7 @@ class _ProfileState extends State<Profile> {
 
                   if (_interests.isEmpty)
                     Text(
-                      'Noch keine Interessen hinzugefügt.',
+                      l10n.noInterestsAdded,
                       style: TextStyle(color: Colors.grey[600]),
                     )
                   else
@@ -356,7 +357,7 @@ class _ProfileState extends State<Profile> {
                             238,
                           ),
                           label: Text(
-                            interest,
+                            getInterestName(interest, l10n),
                             style: const TextStyle(color: Colors.black),
                           ),
                           side: BorderSide.none,
@@ -370,7 +371,6 @@ class _ProfileState extends State<Profile> {
   }
 }
 
-// bottom sheet to edit interests
 class _AddInterestsSheet extends StatefulWidget {
   final Set<String> current;
   final Future<void> Function(Set<String>) onSave;
@@ -393,6 +393,8 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -404,13 +406,13 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Interessen bearbeiten',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          Text(
+            l10n.editInterests,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 4),
           Text(
-            'Tippe auf ein Interesse um es hinzuzufügen oder zu entfernen.',
+            l10n.interestsTip,
             style: TextStyle(color: Colors.grey[600], fontSize: 13),
           ),
           const SizedBox(height: 16),
@@ -426,7 +428,7 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
                     backgroundColor: const Color.fromARGB(255, 238, 238, 238),
                     showCheckmark: false,
                     selectedColor: const Color(0xFFEEF0FB),
-                    label: Text(interest),
+                    label: Text(getInterestName(interest, l10n)),
                     selected: selected,
                     labelStyle: TextStyle(
                       color: selected
@@ -461,10 +463,8 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
                     onPressed: () async {
                       if (_selected.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Bitte wähle mindestens ein Interesse.',
-                            ),
+                          SnackBar(
+                            content: Text(l10n.pleaseSelectInterest),
                           ),
                         );
                         return;
@@ -478,7 +478,7 @@ class _AddInterestsSheetState extends State<_AddInterestsSheet> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     child: Text(
-                      'Speichern',
+                      l10n.save,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,

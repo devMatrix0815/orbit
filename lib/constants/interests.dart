@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 
 const List<String> kAllInterests = [
   'Sport & Fitness', 'Musik', 'Gaming', 'Lesen', 'Kochen', 'Reisen',
@@ -72,3 +73,36 @@ const Map<String, Color> kTagColors = {
   'Ehrenamt': Color(0xFFD7F5D7),
   'Ernährung': Color(0xFFFFF9C4),
 };
+
+// Returns the localized display name for a German interest key.
+// The key stays German (Firestore storage), only the display changes.
+String getInterestName(String key, AppLocalizations l10n) {
+  switch (key) {
+    case 'Sport & Fitness': return l10n.interestSportFitness;
+    case 'Musik':           return l10n.interestMusik;
+    case 'Gaming':          return l10n.interestGaming;
+    case 'Lesen':           return l10n.interestLesen;
+    case 'Kochen':          return l10n.interestKochen;
+    case 'Reisen':          return l10n.interestReisen;
+    case 'Fotografie':      return l10n.interestFotografie;
+    case 'Kunst':           return l10n.interestKunst;
+    case 'Film & Serien':   return l10n.interestFilmSerien;
+    case 'Technologie':     return l10n.interestTechnologie;
+    case 'Natur':           return l10n.interestNatur;
+    case 'Mode':            return l10n.interestMode;
+    case 'Yoga':            return l10n.interestYoga;
+    case 'Tanzen':          return l10n.interestTanzen;
+    case 'Wissenschaft':    return l10n.interestWissenschaft;
+    case 'Geschichte':      return l10n.interestGeschichte;
+    case 'Sprachen':        return l10n.interestSprachen;
+    case 'Tiere':           return l10n.interestTiere;
+    case 'DIY':             return l10n.interestDIY;
+    case 'Finanzen':        return l10n.interestFinanzen;
+    case 'Politik':         return l10n.interestPolitik;
+    case 'Philosophie':     return l10n.interestPhilosophie;
+    case 'Familie':         return l10n.interestFamilie;
+    case 'Ehrenamt':        return l10n.interestEhrenamt;
+    case 'Ernährung':       return l10n.interestErnaehrung;
+    default:                return key;
+  }
+}

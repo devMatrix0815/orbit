@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 import '../models/circle_model.dart';
 import '../constants/interests.dart';
 import 'circle_detail_screen.dart';
 
-// my circles tab - lists all circles the user is part of
 class MyCircles extends StatefulWidget {
   const MyCircles({super.key});
 
@@ -16,7 +16,6 @@ class MyCircles extends StatefulWidget {
   State<MyCircles> createState() => _MyCirclesState();
 }
 
-// circular avatar for pinned/top circles
 class _TopCircleAvatar extends StatelessWidget {
   final Circle circle;
   final VoidCallback onTap;
@@ -106,7 +105,6 @@ class _MyCirclesState extends State<MyCircles> {
     super.dispose();
   }
 
-  // bottom sheet to create a new circle
   Future<void> _showCreateCircleSheet() async {
     final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -124,34 +122,37 @@ class _MyCirclesState extends State<MyCircles> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
+        builder: (context) {
+          final l = AppLocalizations.of(context)!;
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.camera_alt_outlined),
-                title: const Text('Kamera'),
-                onTap: () => Navigator.pop(context, ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Galerie'),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt_outlined),
+                  title: Text(l.camera),
+                  onTap: () => Navigator.pop(context, ImageSource.camera),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library_outlined),
+                  title: Text(l.gallery),
+                  onTap: () => Navigator.pop(context, ImageSource.gallery),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        },
       );
 
       if (source == null) return;
@@ -184,219 +185,218 @@ class _MyCirclesState extends State<MyCircles> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
+            final l = AppLocalizations.of(context)!;
             return SizedBox(
               height: MediaQuery.of(context).size.height * 0.9,
               child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Neuen Kreis erstellen',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 24,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                ),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l.createNewCircle,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(sheetContext),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Image picker
-                    GestureDetector(
-                      onTap: () => pickImage(setSheetState),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          height: 140,
-                          width: double.infinity,
-                          color: const Color(0xFFFF9966),
-                          child: imageBytes != null
-                              ? Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Image.memory(imageBytes!, fit: BoxFit.cover),
-                                    Container(
-                                      color: Colors.black26,
-                                      child: const Icon(
-                                        Icons.edit,
-                                        color: Colors.white,
-                                        size: 32,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : const Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.add_photo_alternate_outlined,
-                                      color: Colors.white,
-                                      size: 40,
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      'Bild auswählen',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(sheetContext),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                    // Name field
-                    TextFormField(
-                      controller: nameController,
-                      autofocus: false,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        labelText: 'Kreisname',
-                        hintText: 'z.B. Besties, Fotografie, Running...',
-                        border: OutlineInputBorder(
+                      GestureDetector(
+                        onTap: () => pickImage(setSheetState),
+                        child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                        ),
-                        prefixIcon: const Icon(Icons.group),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Bitte einen Namen eingeben.';
-                        }
-                        if (value.trim().length < 2) {
-                          return 'Name muss mindestens 2 Zeichen haben.';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Tag selection
-                    Text(
-                      'Kategorie (mind. 1 auswählen)',
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: kAllInterests.map((tag) {
-                        final isSelected = selectedTags.contains(tag);
-                        return FilterChip(
-                          label: Text(tag),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setSheetState(() {
-                              if (selected) {
-                                selectedTags.add(tag);
-                              } else {
-                                selectedTags.remove(tag);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Save button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: FilledButton(
-                        onPressed: isSaving
-                            ? null
-                            : () async {
-                                if (!formKey.currentState!.validate()) return;
-                                if (selectedTags.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Wähle mindestens eine Kategorie.',
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                setSheetState(() => isSaving = true);
-
-                                try {
-                                  final uid =
-                                      FirebaseAuth.instance.currentUser!.uid;
-                                  final name = nameController.text.trim();
-
-                                  final data = {
-                                    'name': name,
-                                    'createdBy': uid,
-                                    'createdAt': FieldValue.serverTimestamp(),
-                                    'members': [uid],
-                                    'memberCount': 1,
-                                    'tags': selectedTags.toList(),
-                                    'description': '',
-                                    'imageUrl': '',
-                                    if (imageBase64 != null) 'imageBase64': imageBase64,
-                                  };
-
-                                  await FirebaseFirestore.instance
-                                      .collection('circles')
-                                      .add(data);
-
-                                  if (sheetContext.mounted) {
-                                    Navigator.pop(sheetContext);
-                                  }
-                                  _loadCircles();
-                                } catch (e) {
-                                  setSheetState(() => isSaving = false);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Fehler beim Erstellen des Kreises.',
+                          child: Container(
+                            height: 140,
+                            width: double.infinity,
+                            color: const Color(0xFFFF9966),
+                            child: imageBytes != null
+                                ? Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      Image.memory(imageBytes!,
+                                          fit: BoxFit.cover),
+                                      Container(
+                                        color: Colors.black26,
+                                        child: const Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                          size: 32,
                                         ),
                                       ),
-                                    );
-                                  }
-                                }
-                              },
-                        child: isSaving
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Kreis erstellen',
-                                style: TextStyle(fontSize: 16),
-                              ),
+                                    ],
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.add_photo_alternate_outlined,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        l.selectImage,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: nameController,
+                        autofocus: false,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: InputDecoration(
+                          labelText: l.circleNameLabel,
+                          hintText: l.circleNameHint,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.group),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return l.pleaseEnterCircleName;
+                          }
+                          if (value.trim().length < 2) {
+                            return l.nameTooShort;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      Text(
+                        l.categorySelectHint,
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: kAllInterests.map((tag) {
+                          final isSelected = selectedTags.contains(tag);
+                          return FilterChip(
+                            label: Text(getInterestName(tag, l)),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setSheetState(() {
+                                if (selected) {
+                                  selectedTags.add(tag);
+                                } else {
+                                  selectedTags.remove(tag);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: FilledButton(
+                          onPressed: isSaving
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+                                  if (selectedTags.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            l.selectAtLeastOneCategory),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  setSheetState(() => isSaving = true);
+
+                                  try {
+                                    final uid = FirebaseAuth
+                                        .instance.currentUser!.uid;
+                                    final name = nameController.text.trim();
+
+                                    final data = {
+                                      'name': name,
+                                      'createdBy': uid,
+                                      'createdAt':
+                                          FieldValue.serverTimestamp(),
+                                      'members': [uid],
+                                      'memberCount': 1,
+                                      'tags': selectedTags.toList(),
+                                      'description': '',
+                                      'imageUrl': '',
+                                      if (imageBase64 != null)
+                                        'imageBase64': imageBase64,
+                                    };
+
+                                    await FirebaseFirestore.instance
+                                        .collection('circles')
+                                        .add(data);
+
+                                    if (sheetContext.mounted) {
+                                      Navigator.pop(sheetContext);
+                                    }
+                                    _loadCircles();
+                                  } catch (e) {
+                                    setSheetState(() => isSaving = false);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              AppLocalizations.of(context)!
+                                                  .errorCreatingCircle),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                          child: isSaving
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  l.createCircle,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
             );
           },
         );
@@ -404,7 +404,6 @@ class _MyCirclesState extends State<MyCircles> {
     );
   }
 
-  // loads all circles from firestore where user is a member + pinned ids
   Future<void> _loadCircles() async {
     if (!mounted) return;
     setState(() {
@@ -441,7 +440,7 @@ class _MyCirclesState extends State<MyCircles> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Fehler beim Laden der Kreise.';
+        _error = AppLocalizations.of(context)!.errorLoadingCircles;
         _isLoading = false;
       });
     }
@@ -465,8 +464,8 @@ class _MyCirclesState extends State<MyCircles> {
     );
   }
 
-  // circle card with image, name and member count
   Widget _buildCircleCard(Circle circle) {
+    final l10n = AppLocalizations.of(context)!;
     final Uint8List? imageBytes = circle.imageBase64 != null
         ? base64Decode(circle.imageBase64!)
         : null;
@@ -501,7 +500,7 @@ class _MyCirclesState extends State<MyCircles> {
                       color: const Color(0xFFFF9966),
                     ),
                     title: Text(
-                      isPinned ? 'Von Top-Kreise entfernen' : 'Zu Top-Kreise hinzufügen',
+                      isPinned ? l10n.removeFromTop : l10n.addToTop,
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -530,12 +529,10 @@ class _MyCirclesState extends State<MyCircles> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Background: image or orange placeholder
                 imageBytes != null
                     ? Image.memory(imageBytes, fit: BoxFit.cover)
                     : const ColoredBox(color: Color(0xFFFF9966)),
 
-                // Gradient overlay
                 const DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -546,7 +543,6 @@ class _MyCirclesState extends State<MyCircles> {
                   ),
                 ),
 
-                // Name and member count
                 Positioned(
                   left: 16,
                   right: 16,
@@ -564,7 +560,7 @@ class _MyCirclesState extends State<MyCircles> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${circle.memberCount} Mitglieder',
+                        l10n.memberCount(circle.memberCount),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -574,7 +570,6 @@ class _MyCirclesState extends State<MyCircles> {
                   ),
                 ),
 
-                // pin indicator
                 if (isPinned)
                   const Positioned(
                     top: 10,
@@ -590,14 +585,16 @@ class _MyCirclesState extends State<MyCircles> {
   }
 
   Widget _buildTopCirclesRow(List<Circle> pinned) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 10.0),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
           child: Text(
-            'Top-Kreise',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            l10n.topCircles,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
         SizedBox(
@@ -621,7 +618,8 @@ class _MyCirclesState extends State<MyCircles> {
                 showModalBottomSheet(
                   context: context,
                   shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   builder: (_) => SafeArea(
                     child: Column(
@@ -639,7 +637,7 @@ class _MyCirclesState extends State<MyCircles> {
                         const SizedBox(height: 8),
                         ListTile(
                           leading: const Icon(Icons.star_outline),
-                          title: const Text('Von Top-Kreise entfernen'),
+                          title: Text(l10n.removeFromTop),
                           onTap: () {
                             Navigator.pop(context);
                             _togglePin(pinned[i].id);
@@ -655,9 +653,9 @@ class _MyCirclesState extends State<MyCircles> {
           ),
         ),
         const SizedBox(height: 20),
-        const Text(
-          'Alle Kreise',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        Text(
+          l10n.allCircles,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
       ],
@@ -665,6 +663,8 @@ class _MyCirclesState extends State<MyCircles> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -678,7 +678,7 @@ class _MyCirclesState extends State<MyCircles> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadCircles,
-              child: const Text('Erneut versuchen'),
+              child: Text(l10n.retry),
             ),
           ],
         ),
@@ -701,32 +701,32 @@ class _MyCirclesState extends State<MyCircles> {
         children: [
           if (pinnedCircles.isNotEmpty) _buildTopCirclesRow(pinnedCircles),
           if (pinnedCircles.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16.0),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
               child: Text(
-                'Deine Kreise',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                l10n.yourCircles,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           if (_circles.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 40.0),
+            Padding(
+              padding: const EdgeInsets.only(top: 40.0),
               child: Center(
                 child: Text(
-                  'Du bist noch in keinem Kreis.\nEntdecke neue Gruppen!',
+                  l10n.noCirclesYet,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
               ),
             )
           else if (unpinnedCircles.isEmpty && _searchQuery.trim().isNotEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 40.0),
+            Padding(
+              padding: const EdgeInsets.only(top: 40.0),
               child: Center(
                 child: Text(
-                  'Keine Kreise gefunden.',
+                  l10n.noCirclesFound,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
               ),
             )
@@ -739,11 +739,13 @@ class _MyCirclesState extends State<MyCircles> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Meine Kreise',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.myCircles,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -758,7 +760,7 @@ class _MyCirclesState extends State<MyCircles> {
             padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
             child: SearchBar(
               controller: _searchController,
-              hintText: 'Kreise suchen...',
+              hintText: l10n.searchCircles,
               elevation: const WidgetStatePropertyAll(0),
               textStyle: WidgetStatePropertyAll(
                 TextStyle(color: Theme.of(context).colorScheme.outline),
