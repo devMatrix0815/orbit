@@ -5,6 +5,8 @@ import '../models/chat_message_model.dart';
 import '../services/chat_service.dart';
 import '../widgets/user_badges.dart';
 import '../screens/user_profile_screen.dart';
+import 'orbit_widget/js_widget_bubble.dart';
+import 'orbit_widget/widget_template_picker.dart';
 import 'dart:convert';
 
 class ChatWidget extends StatefulWidget {
@@ -118,6 +120,16 @@ class _ChatWidgetState extends State<ChatWidget> {
     }
   }
 
+  void _showWidgetPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => WidgetTemplatePicker(
+        circleId: widget.circleId,
+        parentContext: context,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -193,9 +205,26 @@ class _ChatWidgetState extends State<ChatWidget> {
               ),
             ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
             children: [
+              // Widget-Picker Button
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.add_rounded,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 22,
+                  ),
+                  onPressed: _showWidgetPicker,
+                  tooltip: 'Widget einfügen',
+                ),
+              ),
+              const SizedBox(width: 6),
               Expanded(
                 child: TextField(
                   controller: _messageController,
@@ -282,6 +311,10 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.type == MessageType.widget) {
+      return _buildWidgetMessage(context);
+    }
+
     final l10n = AppLocalizations.of(context)!;
 
     return Padding(
@@ -365,6 +398,77 @@ class _MessageBubble extends StatelessWidget {
             ),
           ),
           if (isOwnMessage) ...[const SizedBox(width: 8), _buildAvatar(context)],
+        ],
+      ),
+    );
+  }
+
+  // Widget messages are full-width with sender info on top.
+  Widget _buildWidgetMessage(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildAvatar(context),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => openUserProfile(context, message.senderId),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      message.senderName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    UserBadgesRow(badges: message.senderBadges, size: 12),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+              child: JsWidgetBubble(
+                message: message,
+                currentUserId: currentUser?.uid ?? '',
+                currentUserName: currentUser?.displayName ?? 'Unbekannt',
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 3, left: 2),
+            child: Text(
+              _formatTime(message.timestamp, l10n),
+              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+            ),
+          ),
         ],
       ),
     );

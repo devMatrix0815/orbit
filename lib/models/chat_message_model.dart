@@ -9,6 +9,9 @@ class ChatMessage {
   final String? senderProfileImageUrl;
   final List<String> senderBadges;
   final MessageType type;
+  final String? widgetHtml;
+  final Map<String, dynamic>? widgetState;
+  final String? widgetType;
 
   ChatMessage({
     required this.id,
@@ -21,6 +24,9 @@ class ChatMessage {
     this.senderProfileImageUrl,
     this.senderBadges = const [],
     this.type = MessageType.text,
+    this.widgetHtml,
+    this.widgetState,
+    this.widgetType,
   });
 
   Map<String, dynamic> toMap() {
@@ -34,6 +40,9 @@ class ChatMessage {
       'senderProfileImageUrl': senderProfileImageUrl,
       'senderBadges': senderBadges,
       'type': type.name,
+      if (widgetHtml != null) 'widgetHtml': widgetHtml,
+      if (widgetState != null) 'widgetState': widgetState,
+      if (widgetType != null) 'widgetType': widgetType,
     };
   }
 
@@ -54,8 +63,13 @@ class ChatMessage {
         (e) => e.name == map['type'],
         orElse: () => MessageType.text,
       ),
+      widgetHtml: map['widgetHtml'],
+      widgetState: map['widgetState'] != null
+          ? Map<String, dynamic>.from(map['widgetState'])
+          : null,
+      widgetType: map['widgetType'],
     );
   }
 }
 
-enum MessageType { text, system }
+enum MessageType { text, system, widget }
