@@ -321,6 +321,41 @@
   "invitedPeople": "Invited People",
   "noneInvitedYet": "Nobody invited yet.",
 
+  "insertWidget": "Insert Widget",
+  "poll": "Poll",
+  "pollSubtitle": "Everyone can vote",
+  "todoList": "Todo List",
+  "todoSubtitle": "Shared task list",
+  "customCode": "Custom Code",
+  "customCodeSubtitle": "HTML + JavaScript Widget",
+  "createPoll": "Create Poll",
+  "pollQuestion": "Question",
+  "pollQuestionHint": "What is your question?",
+  "pollOptions": "Options",
+  "pollOptionHint": "Option {number}",
+  "@pollOptionHint": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "addOption": "Add option",
+  "pollPreviewText": "📊 Poll: {question}",
+  "@pollPreviewText": {
+    "placeholders": {
+      "question": {"type": "String"}
+    }
+  },
+  "createTodoList": "Create Todo List",
+  "todoListTitle": "Title",
+  "todoPreviewText": "✅ Todo list: {title}",
+  "@todoPreviewText": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "send": "Send",
+  "create": "Create",
+
   "errorLoadingMessages": "Error loading messages",
   "errorLoadingOlderMessages": "Error loading older messages",
   "noMessages": "No messages yet",

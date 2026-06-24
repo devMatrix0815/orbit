@@ -321,6 +321,41 @@
   "invitedPeople": "Eingeladene Personen",
   "noneInvitedYet": "Noch niemand eingeladen.",
 
+  "insertWidget": "Widget einfügen",
+  "poll": "Umfrage",
+  "pollSubtitle": "Alle können abstimmen",
+  "todoList": "Todo-Liste",
+  "todoSubtitle": "Geteilte Aufgabenliste",
+  "customCode": "Eigener Code",
+  "customCodeSubtitle": "HTML + JavaScript Widget",
+  "createPoll": "Umfrage erstellen",
+  "pollQuestion": "Frage",
+  "pollQuestionHint": "Was ist deine Frage?",
+  "pollOptions": "Optionen",
+  "pollOptionHint": "Option {number}",
+  "@pollOptionHint": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "addOption": "Option hinzufügen",
+  "pollPreviewText": "📊 Umfrage: {question}",
+  "@pollPreviewText": {
+    "placeholders": {
+      "question": {"type": "String"}
+    }
+  },
+  "createTodoList": "Todo-Liste erstellen",
+  "todoListTitle": "Titel",
+  "todoPreviewText": "✅ Todo-Liste: {title}",
+  "@todoPreviewText": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "send": "Senden",
+  "create": "Erstellen",
+
   "errorLoadingMessages": "Fehler beim Laden der Nachrichten",
   "errorLoadingOlderMessages": "Fehler beim Laden älterer Nachrichten",
   "noMessages": "Noch keine Nachrichten",
