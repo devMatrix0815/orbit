@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/chat_service.dart';
 import 'custom_code_editor.dart';
 import 'poll_template.dart';
@@ -35,7 +36,7 @@ class WidgetTemplatePicker extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                'Widget einfügen',
+                AppLocalizations.of(context)!.insertWidget,
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -44,20 +45,20 @@ class WidgetTemplatePicker extends StatelessWidget {
             ),
             _Tile(
               icon: Icons.poll_rounded,
-              title: 'Umfrage',
-              subtitle: 'Alle können abstimmen',
+              title: AppLocalizations.of(context)!.poll,
+              subtitle: AppLocalizations.of(context)!.pollSubtitle,
               onTap: () => _createPoll(context),
             ),
             _Tile(
               icon: Icons.checklist_rounded,
-              title: 'Todo-Liste',
-              subtitle: 'Geteilte Aufgabenliste',
+              title: AppLocalizations.of(context)!.todoList,
+              subtitle: AppLocalizations.of(context)!.todoSubtitle,
               onTap: () => _createTodo(context),
             ),
             _Tile(
               icon: Icons.code_rounded,
-              title: 'Eigener Code',
-              subtitle: 'HTML + JavaScript Widget',
+              title: AppLocalizations.of(context)!.customCode,
+              subtitle: AppLocalizations.of(context)!.customCodeSubtitle,
               onTap: () => _createCustom(context),
             ),
             const SizedBox(height: 8),
@@ -88,10 +89,10 @@ class WidgetTemplatePicker extends StatelessWidget {
           question: result['question'] as String,
           options: List<String>.from(result['options']),
         ),
-        previewText: '📊 Umfrage: ${result['question']}',
+        previewText: AppLocalizations.of(parentContext)!.pollPreviewText(result['question'] as String),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Fehler: $e')));
+      messenger.showSnackBar(SnackBar(content: Text(AppLocalizations.of(parentContext)!.generalError(e.toString()))));
     }
   }
 
@@ -111,10 +112,10 @@ class WidgetTemplatePicker extends StatelessWidget {
         widgetType: 'todo',
         widgetHtml: TodoTemplate.html,
         initialState: TodoTemplate.createInitialState(title: title),
-        previewText: '✅ Todo-Liste: $title',
+        previewText: AppLocalizations.of(parentContext)!.todoPreviewText(title),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Fehler: $e')));
+      messenger.showSnackBar(SnackBar(content: Text(AppLocalizations.of(parentContext)!.generalError(e.toString()))));
     }
   }
 
@@ -189,8 +190,9 @@ class _PollDialogState extends State<_PollDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Umfrage erstellen'),
+      title: Text(l10n.createPoll),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -198,17 +200,17 @@ class _PollDialogState extends State<_PollDialog> {
           children: [
             TextField(
               controller: _questionCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Frage',
-                hintText: 'Was ist deine Frage?',
+              decoration: InputDecoration(
+                labelText: l10n.pollQuestion,
+                hintText: l10n.pollQuestionHint,
               ),
               maxLength: 200,
               textCapitalization: TextCapitalization.sentences,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Optionen',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            Text(
+              l10n.pollOptions,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
             ),
             const SizedBox(height: 8),
             ...List.generate(_opts.length, (i) => Padding(
@@ -219,7 +221,7 @@ class _PollDialogState extends State<_PollDialog> {
                     child: TextField(
                       controller: _opts[i],
                       decoration: InputDecoration(
-                        hintText: 'Option ${i + 1}',
+                        hintText: l10n.pollOptionHint(i + 1),
                         isDense: true,
                       ),
                       maxLength: 100,
@@ -240,7 +242,7 @@ class _PollDialogState extends State<_PollDialog> {
                 onPressed: () =>
                     setState(() => _opts.add(TextEditingController())),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Option hinzufügen'),
+                label: Text(l10n.addOption),
               ),
           ],
         ),
@@ -248,7 +250,7 @@ class _PollDialogState extends State<_PollDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Abbrechen'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
@@ -260,7 +262,7 @@ class _PollDialogState extends State<_PollDialog> {
             if (q.isEmpty || options.length < 2) return;
             Navigator.pop(context, {'question': q, 'options': options});
           },
-          child: const Text('Senden'),
+          child: Text(l10n.send),
         ),
       ],
     );
@@ -277,7 +279,13 @@ class _TodoDialog extends StatefulWidget {
 }
 
 class _TodoDialogState extends State<_TodoDialog> {
-  final _ctrl = TextEditingController(text: 'Todo-Liste');
+  late final TextEditingController _ctrl;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ctrl = TextEditingController(text: AppLocalizations.of(context)!.todoList);
+  }
 
   @override
   void dispose() {
@@ -287,25 +295,26 @@ class _TodoDialogState extends State<_TodoDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Todo-Liste erstellen'),
+      title: Text(l10n.createTodoList),
       content: TextField(
         controller: _ctrl,
-        decoration: const InputDecoration(labelText: 'Titel'),
+        decoration: InputDecoration(labelText: l10n.todoListTitle),
         maxLength: 100,
         textCapitalization: TextCapitalization.sentences,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Abbrechen'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
             final t = _ctrl.text.trim();
-            Navigator.pop(context, t.isEmpty ? 'Todo-Liste' : t);
+            Navigator.pop(context, t.isEmpty ? l10n.todoList : t);
           },
-          child: const Text('Erstellen'),
+          child: Text(l10n.create),
         ),
       ],
     );

@@ -546,6 +546,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noneInvitedYet => 'Nobody invited yet.';
 
   @override
+  String get insertWidget => 'Insert Widget';
+
+  @override
+  String get poll => 'Poll';
+
+  @override
+  String get pollSubtitle => 'Everyone can vote';
+
+  @override
+  String get todoList => 'Todo List';
+
+  @override
+  String get todoSubtitle => 'Shared task list';
+
+  @override
+  String get customCode => 'Custom Code';
+
+  @override
+  String get customCodeSubtitle => 'HTML + JavaScript Widget';
+
+  @override
+  String get createPoll => 'Create Poll';
+
+  @override
+  String get pollQuestion => 'Question';
+
+  @override
+  String get pollQuestionHint => 'What is your question?';
+
+  @override
+  String get pollOptions => 'Options';
+
+  @override
+  String pollOptionHint(int number) {
+    return 'Option $number';
+  }
+
+  @override
+  String get addOption => 'Add option';
+
+  @override
+  String pollPreviewText(String question) {
+    return '📊 Poll: $question';
+  }
+
+  @override
+  String get createTodoList => 'Create Todo List';
+
+  @override
+  String get todoListTitle => 'Title';
+
+  @override
+  String todoPreviewText(String title) {
+    return '✅ Todo list: $title';
+  }
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get create => 'Create';
+
+  @override
   String get errorLoadingMessages => 'Error loading messages';
 
   @override

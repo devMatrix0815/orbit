@@ -1076,6 +1076,120 @@ abstract class AppLocalizations {
   /// **'Noch niemand eingeladen.'**
   String get noneInvitedYet;
 
+  /// No description provided for @insertWidget.
+  ///
+  /// In de, this message translates to:
+  /// **'Widget einfügen'**
+  String get insertWidget;
+
+  /// No description provided for @poll.
+  ///
+  /// In de, this message translates to:
+  /// **'Umfrage'**
+  String get poll;
+
+  /// No description provided for @pollSubtitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle können abstimmen'**
+  String get pollSubtitle;
+
+  /// No description provided for @todoList.
+  ///
+  /// In de, this message translates to:
+  /// **'Todo-Liste'**
+  String get todoList;
+
+  /// No description provided for @todoSubtitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Geteilte Aufgabenliste'**
+  String get todoSubtitle;
+
+  /// No description provided for @customCode.
+  ///
+  /// In de, this message translates to:
+  /// **'Eigener Code'**
+  String get customCode;
+
+  /// No description provided for @customCodeSubtitle.
+  ///
+  /// In de, this message translates to:
+  /// **'HTML + JavaScript Widget'**
+  String get customCodeSubtitle;
+
+  /// No description provided for @createPoll.
+  ///
+  /// In de, this message translates to:
+  /// **'Umfrage erstellen'**
+  String get createPoll;
+
+  /// No description provided for @pollQuestion.
+  ///
+  /// In de, this message translates to:
+  /// **'Frage'**
+  String get pollQuestion;
+
+  /// No description provided for @pollQuestionHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Was ist deine Frage?'**
+  String get pollQuestionHint;
+
+  /// No description provided for @pollOptions.
+  ///
+  /// In de, this message translates to:
+  /// **'Optionen'**
+  String get pollOptions;
+
+  /// No description provided for @pollOptionHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Option {number}'**
+  String pollOptionHint(int number);
+
+  /// No description provided for @addOption.
+  ///
+  /// In de, this message translates to:
+  /// **'Option hinzufügen'**
+  String get addOption;
+
+  /// No description provided for @pollPreviewText.
+  ///
+  /// In de, this message translates to:
+  /// **'📊 Umfrage: {question}'**
+  String pollPreviewText(String question);
+
+  /// No description provided for @createTodoList.
+  ///
+  /// In de, this message translates to:
+  /// **'Todo-Liste erstellen'**
+  String get createTodoList;
+
+  /// No description provided for @todoListTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Titel'**
+  String get todoListTitle;
+
+  /// No description provided for @todoPreviewText.
+  ///
+  /// In de, this message translates to:
+  /// **'✅ Todo-Liste: {title}'**
+  String todoPreviewText(String title);
+
+  /// No description provided for @send.
+  ///
+  /// In de, this message translates to:
+  /// **'Senden'**
+  String get send;
+
+  /// No description provided for @create.
+  ///
+  /// In de, this message translates to:
+  /// **'Erstellen'**
+  String get create;
+
   /// No description provided for @errorLoadingMessages.
   ///
   /// In de, this message translates to:

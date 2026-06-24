@@ -549,6 +549,69 @@ class AppLocalizationsDe extends AppLocalizations {
   String get noneInvitedYet => 'Noch niemand eingeladen.';
 
   @override
+  String get insertWidget => 'Widget einfügen';
+
+  @override
+  String get poll => 'Umfrage';
+
+  @override
+  String get pollSubtitle => 'Alle können abstimmen';
+
+  @override
+  String get todoList => 'Todo-Liste';
+
+  @override
+  String get todoSubtitle => 'Geteilte Aufgabenliste';
+
+  @override
+  String get customCode => 'Eigener Code';
+
+  @override
+  String get customCodeSubtitle => 'HTML + JavaScript Widget';
+
+  @override
+  String get createPoll => 'Umfrage erstellen';
+
+  @override
+  String get pollQuestion => 'Frage';
+
+  @override
+  String get pollQuestionHint => 'Was ist deine Frage?';
+
+  @override
+  String get pollOptions => 'Optionen';
+
+  @override
+  String pollOptionHint(int number) {
+    return 'Option $number';
+  }
+
+  @override
+  String get addOption => 'Option hinzufügen';
+
+  @override
+  String pollPreviewText(String question) {
+    return '📊 Umfrage: $question';
+  }
+
+  @override
+  String get createTodoList => 'Todo-Liste erstellen';
+
+  @override
+  String get todoListTitle => 'Titel';
+
+  @override
+  String todoPreviewText(String title) {
+    return '✅ Todo-Liste: $title';
+  }
+
+  @override
+  String get send => 'Senden';
+
+  @override
+  String get create => 'Erstellen';
+
+  @override
   String get errorLoadingMessages => 'Fehler beim Laden der Nachrichten';
 
   @override
