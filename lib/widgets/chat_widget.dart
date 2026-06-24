@@ -403,67 +403,88 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  // Widget messages are full-width with sender info on top.
   Widget _buildWidgetMessage(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final currentUser = FirebaseAuth.instance.currentUser;
 
+    // Same corner logic as text bubbles: the "tail" corner is 4, rest 16.
+    final radius = BorderRadius.only(
+      topLeft: Radius.circular(isOwnMessage ? 16 : 4),
+      topRight: Radius.circular(isOwnMessage ? 4 : 16),
+      bottomLeft: const Radius.circular(16),
+      bottomRight: const Radius.circular(16),
+    );
+
+    final bubble = Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: radius,
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: JsWidgetBubble(
+          message: message,
+          currentUserId: currentUser?.uid ?? '',
+          currentUserName: currentUser?.displayName ?? 'Unbekannt',
+        ),
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            isOwnMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              _buildAvatar(context),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => openUserProfile(context, message.senderId),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      message.senderName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
+          // Sender row — mirrored like text messages (hidden for own)
+          if (!isOwnMessage) ...[
+            Row(
+              children: [
+                _buildAvatar(context),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => openUserProfile(context, message.senderId),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        message.senderName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    UserBadgesRow(badges: message.senderBadges, size: 12),
-                  ],
+                      UserBadgesRow(badges: message.senderBadges, size: 12),
+                    ],
+                  ),
                 ),
-              ),
+              ],
+            ),
+            const SizedBox(height: 6),
+          ],
+          if (isOwnMessage) ...[
+            const SizedBox(height: 2),
+          ],
+          Row(
+            mainAxisAlignment:
+                isOwnMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!isOwnMessage) const SizedBox(width: 40), // avatar width offset
+              Flexible(child: bubble),
+              if (isOwnMessage) ...[const SizedBox(width: 8), _buildAvatar(context)],
             ],
           ),
-          const SizedBox(height: 6),
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-              ),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-              ),
-              child: JsWidgetBubble(
-                message: message,
-                currentUserId: currentUser?.uid ?? '',
-                currentUserName: currentUser?.displayName ?? 'Unbekannt',
-              ),
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.only(top: 3, left: 2),
+            padding: EdgeInsets.only(
+              top: 3,
+              left: isOwnMessage ? 0 : 44,
+              right: isOwnMessage ? 44 : 0,
+            ),
             child: Text(
               _formatTime(message.timestamp, l10n),
               style: TextStyle(fontSize: 10, color: Colors.grey[500]),
