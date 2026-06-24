@@ -18,6 +18,24 @@ const Map<String, List<String>> kInterestCategories = {
   'Gesellschaft': ['Politik', 'Finanzen', 'Ehrenamt'],
 };
 
+const Map<String, IconData> kCategoryIcons = {
+  'Bewegung': Icons.directions_run,
+  'Kreativität': Icons.palette,
+  'Unterhaltung': Icons.tv,
+  'Lifestyle': Icons.spa,
+  'Wissen': Icons.school,
+  'Gesellschaft': Icons.people,
+};
+
+const Map<String, Color> kCategoryColors = {
+  'Bewegung': Color(0xFFFFE0B2),
+  'Kreativität': Color(0xFFF3E5F5),
+  'Unterhaltung': Color(0xFFE8EAF6),
+  'Lifestyle': Color(0xFFE8F5E9),
+  'Wissen': Color(0xFFE1F5FE),
+  'Gesellschaft': Color(0xFFE3F2FD),
+};
+
 const Map<String, IconData> kTagIcons = {
   'Sport & Fitness': Icons.directions_run,
   'Musik': Icons.music_note,
@@ -76,6 +94,18 @@ const Map<String, Color> kTagColors = {
 
 // Returns the localized display name for a German interest key.
 // The key stays German (Firestore storage), only the display changes.
+String getCategoryName(String key, AppLocalizations l10n) {
+  switch (key) {
+    case 'Bewegung':     return l10n.categoryBewegung;
+    case 'Kreativität':  return l10n.categoryKreativitaet;
+    case 'Unterhaltung': return l10n.categoryUnterhaltung;
+    case 'Lifestyle':    return l10n.categoryLifestyle;
+    case 'Wissen':       return l10n.categoryWissen;
+    case 'Gesellschaft': return l10n.categoryGesellschaft;
+    default:             return key;
+  }
+}
+
 String getInterestName(String key, AppLocalizations l10n) {
   switch (key) {
     case 'Sport & Fitness': return l10n.interestSportFitness;

@@ -566,6 +566,42 @@ abstract class AppLocalizations {
   /// **'Nach Kategorie filtern'**
   String get filterByCategory;
 
+  /// No description provided for @categoryBewegung.
+  ///
+  /// In de, this message translates to:
+  /// **'Bewegung'**
+  String get categoryBewegung;
+
+  /// No description provided for @categoryKreativitaet.
+  ///
+  /// In de, this message translates to:
+  /// **'Kreativität'**
+  String get categoryKreativitaet;
+
+  /// No description provided for @categoryUnterhaltung.
+  ///
+  /// In de, this message translates to:
+  /// **'Unterhaltung'**
+  String get categoryUnterhaltung;
+
+  /// No description provided for @categoryLifestyle.
+  ///
+  /// In de, this message translates to:
+  /// **'Lifestyle'**
+  String get categoryLifestyle;
+
+  /// No description provided for @categoryWissen.
+  ///
+  /// In de, this message translates to:
+  /// **'Wissen'**
+  String get categoryWissen;
+
+  /// No description provided for @categoryGesellschaft.
+  ///
+  /// In de, this message translates to:
+  /// **'Gesellschaft'**
+  String get categoryGesellschaft;
+
   /// No description provided for @recommendedGroups.
   ///
   /// In de, this message translates to:
