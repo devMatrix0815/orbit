@@ -674,6 +674,54 @@ abstract class AppLocalizations {
   /// **'Fehler beim Ändern des Profilbildes.'**
   String get errorChangingProfilePicture;
 
+  /// No description provided for @biography.
+  ///
+  /// In de, this message translates to:
+  /// **'Biografie'**
+  String get biography;
+
+  /// No description provided for @bioHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Schreib ein paar Zeilen über dich...'**
+  String get bioHint;
+
+  /// No description provided for @links.
+  ///
+  /// In de, this message translates to:
+  /// **'Links'**
+  String get links;
+
+  /// No description provided for @link1Hint.
+  ///
+  /// In de, this message translates to:
+  /// **'Link 1 (z.B. https://instagram.com/...)'**
+  String get link1Hint;
+
+  /// No description provided for @link2Hint.
+  ///
+  /// In de, this message translates to:
+  /// **'Link 2 (z.B. https://github.com/...)'**
+  String get link2Hint;
+
+  /// No description provided for @editBioAndLinks.
+  ///
+  /// In de, this message translates to:
+  /// **'Bio & Links bearbeiten'**
+  String get editBioAndLinks;
+
+  /// No description provided for @noBio.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Biografie hinzugefügt.'**
+  String get noBio;
+
+  /// No description provided for @errorSavingBio.
+  ///
+  /// In de, this message translates to:
+  /// **'Fehler beim Speichern.'**
+  String get errorSavingBio;
+
   /// No description provided for @errorJoining.
   ///
   /// In de, this message translates to:

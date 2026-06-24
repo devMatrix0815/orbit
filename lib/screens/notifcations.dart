@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/l10n/app_localizations.dart';
 import '../models/invite_model.dart';
 import '../models/join_request_model.dart';
+import 'user_profile_screen.dart';
 
 class Notifcations extends StatelessWidget {
   const Notifcations({super.key});
@@ -330,33 +331,39 @@ class _JoinRequestCardState extends State<_JoinRequestCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                _buildUserAvatar(),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.wantsToJoin(widget.request.requestingDisplayName),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+            GestureDetector(
+              onTap: () => openUserProfile(
+                context,
+                widget.request.requestingUserId,
+              ),
+              child: Row(
+                children: [
+                  _buildUserAvatar(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.wantsToJoin(widget.request.requestingDisplayName),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.joinRequestFor(widget.request.circleName),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.outline,
-                          fontSize: 13,
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.joinRequestFor(widget.request.circleName),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.outline,
+                            fontSize: 13,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 14),
             if (_isLoading)

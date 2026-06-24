@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Settings;
@@ -20,6 +21,9 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   String _displayName = '';
   int? _age;
+  String _bio = '';
+  String _link1 = '';
+  String _link2 = '';
   List<String> _interests = [];
   List<String> _badges = [];
   bool _loading = true;
@@ -49,6 +53,9 @@ class _ProfileState extends State<Profile> {
     setState(() {
       _displayName = data['displayName'] as String? ?? '';
       _age = data['age'] as int?;
+      _bio = data['bio'] as String? ?? '';
+      _link1 = data['link1'] as String? ?? '';
+      _link2 = data['link2'] as String? ?? '';
       _interests = List<String>.from(data['interests'] ?? []);
       _badges = List<String>.from(data['badges'] ?? []);
       _profileImageBase64 = data['profileImageBase64'] as String?;
@@ -138,6 +145,70 @@ class _ProfileState extends State<Profile> {
     } finally {
       if (mounted) setState(() => _isPickingImage = false);
     }
+  }
+
+  Future<void> _openEditBioLinks() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _EditBioLinksSheet(
+        initialBio: _bio,
+        initialLink1: _link1,
+        initialLink2: _link2,
+        onSave: (bio, link1, link2) async {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user == null) return;
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .update({'bio': bio, 'link1': link1, 'link2': link2});
+          if (mounted) {
+            setState(() {
+              _bio = bio;
+              _link1 = link1;
+              _link2 = link2;
+            });
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildLinkTile(String url) {
+    final uri = Uri.tryParse(url);
+    final label = url
+        .replaceFirst(RegExp(r'^https?://'), '')
+        .replaceFirst(RegExp(r'^www\.'), '');
+    return InkWell(
+      onTap: () async {
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(Icons.link, size: 18, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  decoration: TextDecoration.underline,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _openAddInterests() async {
@@ -314,6 +385,51 @@ class _ProfileState extends State<Profile> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
+                        l10n.biography,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      TextButton.icon(
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStatePropertyAll(
+                            Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        onPressed: _openEditBioLinks,
+                        label: Text(
+                          l10n.edit,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  if (_bio.isEmpty)
+                    Text(
+                      l10n.noBio,
+                      style: TextStyle(color: Colors.grey[600]),
+                    )
+                  else
+                    Text(_bio),
+
+                  if (_link1.isNotEmpty || _link2.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    if (_link1.isNotEmpty) _buildLinkTile(_link1),
+                    if (_link2.isNotEmpty) _buildLinkTile(_link2),
+                  ],
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
                         l10n.interests,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
@@ -364,6 +480,146 @@ class _ProfileState extends State<Profile> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _EditBioLinksSheet extends StatefulWidget {
+  final String initialBio;
+  final String initialLink1;
+  final String initialLink2;
+  final Future<void> Function(String bio, String link1, String link2) onSave;
+
+  const _EditBioLinksSheet({
+    required this.initialBio,
+    required this.initialLink1,
+    required this.initialLink2,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditBioLinksSheet> createState() => _EditBioLinksSheetState();
+}
+
+class _EditBioLinksSheetState extends State<_EditBioLinksSheet> {
+  late final TextEditingController _bioController;
+  late final TextEditingController _link1Controller;
+  late final TextEditingController _link2Controller;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bioController = TextEditingController(text: widget.initialBio);
+    _link1Controller = TextEditingController(text: widget.initialLink1);
+    _link2Controller = TextEditingController(text: widget.initialLink2);
+  }
+
+  @override
+  void dispose() {
+    _bioController.dispose();
+    _link1Controller.dispose();
+    _link2Controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.editBioAndLinks,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          const SizedBox(height: 16),
+
+          TextField(
+            controller: _bioController,
+            maxLines: 4,
+            maxLength: 300,
+            decoration: InputDecoration(
+              hintText: l10n.bioHint,
+              border: const OutlineInputBorder(),
+              counterStyle: const TextStyle(fontSize: 11),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          TextField(
+            controller: _link1Controller,
+            keyboardType: TextInputType.url,
+            decoration: InputDecoration(
+              hintText: l10n.link1Hint,
+              prefixIcon: const Icon(Icons.link),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          TextField(
+            controller: _link2Controller,
+            keyboardType: TextInputType.url,
+            decoration: InputDecoration(
+              hintText: l10n.link2Hint,
+              prefixIcon: const Icon(Icons.link),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SizedBox(
+            width: double.infinity,
+            child: _saving
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+                    onPressed: () async {
+                      setState(() => _saving = true);
+                      try {
+                        await widget.onSave(
+                          _bioController.text.trim(),
+                          _link1Controller.text.trim(),
+                          _link2Controller.text.trim(),
+                        );
+                        if (context.mounted) Navigator.pop(context);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.errorSavingBio)),
+                          );
+                        }
+                      } finally {
+                        if (mounted) setState(() => _saving = false);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                    child: Text(
+                      l10n.save,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -4,9 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/l10n/app_localizations.dart';
 import '../models/circle_model.dart';
+import '../constants/interests.dart';
 import 'invite_members_screen.dart';
 import '../widgets/chat_widget.dart';
 import 'circle_settings_screen.dart';
+import 'user_profile_screen.dart';
 import '../widgets/user_badges.dart';
 
 class CircleDetailScreen extends StatefulWidget {
@@ -449,7 +451,8 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                     runSpacing: 6,
                     children: circle.tags
                         .map((tag) => Chip(
-                              label: Text(tag,
+                              label: Text(
+                                  getInterestName(tag, l10n),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Theme.of(context).colorScheme.onSurface,
@@ -915,16 +918,18 @@ class _MembersSheetState extends State<_MembersSheet> {
                             _selected.add(uid);
                           })
                       : null,
-                  onTap: _selectionMode && selectable
-                      ? () => setState(() {
-                            if (isSelected) {
-                              _selected.remove(uid);
-                              if (_selected.isEmpty) _selectionMode = false;
-                            } else {
-                              _selected.add(uid);
-                            }
-                          })
-                      : null,
+                  onTap: _selectionMode
+                      ? (selectable
+                          ? () => setState(() {
+                                if (isSelected) {
+                                  _selected.remove(uid);
+                                  if (_selected.isEmpty) _selectionMode = false;
+                                } else {
+                                  _selected.add(uid);
+                                }
+                              })
+                          : null)
+                      : () => openUserProfile(context, uid),
                   child: ListTile(
                     leading: _buildAvatar(member, isSelected, selectable),
                     title: nameWithBadges(name, badges: badges),
