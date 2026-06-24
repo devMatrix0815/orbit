@@ -1,0 +1,371 @@
+{
+  "@@locale": "en",
+
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "retry": "Try again",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "unknown": "Unknown",
+  "interests": "Interests",
+  "editInterests": "Edit Interests",
+  "interestsTip": "Tap an interest to add or remove it.",
+  "pleaseSelectInterest": "Please select at least one interest.",
+  "noInterestsAdded": "No interests added yet.",
+  "all": "All",
+  "admin": "Admin",
+  "operator": "Operator",
+  "you": "You",
+  "ban": "Ban",
+  "unban": "Unban",
+  "leave": "Leave",
+  "transfer": "Transfer",
+  "invite": "Invite",
+  "accepted": "Accepted",
+  "declined": "Declined",
+  "pending": "Pending",
+  "nameLabel": "Name",
+  "ageLabel": "Age",
+  "language": "Language",
+  "darkMode": "Dark Mode",
+  "yesterday": "Yesterday",
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+  "sunday": "Sunday",
+
+  "memberCount": "{count} members",
+  "@memberCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "ageYears": "{age} years old",
+  "@ageYears": {
+    "placeholders": {
+      "age": {"type": "int"}
+    }
+  },
+
+  "generalError": "Error: {message}",
+  "@generalError": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+
+  "networkError": "Network error: {message}",
+  "@networkError": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+
+  "sendError": "Error sending: {error}",
+  "@sendError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "membersWithCount": "Members ({count})",
+  "@membersWithCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "removeCount": "Remove {count}",
+  "@removeCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "signInWithGoogle": "Sign in with Google",
+
+  "loginFailed": "Login failed: {error}",
+  "@loginFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "setupProfile": "Create your profile",
+  "setupProfileSubtitle": "How should others see you?",
+  "next": "Next",
+  "yourInterests": "Your Interests",
+  "selectAtLeastOneInterest": "Select at least one interest.",
+  "createProfile": "Create Profile",
+  "pleaseEnterName": "Please enter your name.",
+  "pleaseEnterValidAge": "Please enter a valid age.",
+
+  "myCircles": "My Circles",
+  "searchCircles": "Search circles...",
+  "createNewCircle": "Create new circle",
+  "selectImage": "Select image",
+  "circleNameLabel": "Circle name",
+  "circleNameHint": "e.g. Besties, Photography, Running...",
+  "pleaseEnterCircleName": "Please enter a name.",
+  "nameTooShort": "Name must be at least 2 characters.",
+  "categorySelectHint": "Category (select at least 1)",
+  "selectAtLeastOneCategory": "Select at least one category.",
+  "createCircle": "Create circle",
+  "errorCreatingCircle": "Error creating circle.",
+  "errorLoadingCircles": "Error loading circles.",
+  "removeFromTop": "Remove from Top Circles",
+  "addToTop": "Add to Top Circles",
+  "topCircles": "Top Circles",
+  "allCircles": "All Circles",
+  "yourCircles": "Your Circles",
+  "noCirclesYet": "You're not in any circles yet.\nDiscover new groups!",
+  "noCirclesFound": "No circles found.",
+
+  "discover": "Discover",
+  "searchGroups": "Search groups...",
+  "filterByCategory": "Filter by category",
+  "recommendedGroups": "Recommended Groups",
+  "noGroupsFound": "No groups found.",
+  "showMore": "Show more",
+
+  "notifications": "Notifications",
+  "errorLoadingNotifications": "Error loading notifications.",
+  "noNotifications": "No new notifications.",
+
+  "inviteToCircle": "Invitation to circle \"{name}\"",
+  "@inviteToCircle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "youWereInvited": "You were invited to this circle.",
+  "decline": "Decline",
+  "accept": "Accept",
+
+  "joinedCircle": "You are now in \"{name}\"!",
+  "@joinedCircle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorAccepting": "Error accepting.",
+  "errorDeclining": "Error declining.",
+
+  "wantsToJoin": "{name} wants to join",
+  "@wantsToJoin": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "joinRequestFor": "Join request for \"{name}\"",
+  "@joinRequestFor": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "memberAdded": "{name} was added!",
+  "@memberAdded": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "myProfile": "My Profile",
+  "errorChangingProfilePicture": "Error changing profile picture.",
+
+  "errorJoining": "Error joining.",
+  "requestSentSuccess": "Request sent!",
+  "errorSendingRequest": "Error sending request.",
+  "leaveGroup": "Leave Group",
+
+  "confirmLeave": "Do you really want to leave \"{name}\"?",
+  "@confirmLeave": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorLeavingGroup": "Error leaving group.",
+  "members": "Members",
+  "invitePeople": "Invite people",
+  "settings": "Settings",
+  "joinGroup": "Join group",
+  "requestSent": "Request sent",
+  "sendJoinRequest": "Send join request",
+  "inviteOnly": "Invite only",
+  "removeOperatorLabel": "Remove\nOperator",
+  "makeOperatorLabel": "Make\nOperator",
+  "transferAdminLabel": "Transfer\nAdmin",
+  "banMember": "Ban member?",
+
+  "banMembers": "Ban {count} members?",
+  "@banMembers": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "banConfirmSingle": "This person will be removed and can no longer join the group.",
+
+  "banConfirmMultiple": "{count} people will be removed and can no longer join the group.",
+  "@banConfirmMultiple": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "transferAdminTitle": "Transfer Admin",
+
+  "transferAdminConfirm": "{name} will become the new admin. You will lose your admin rights and become a regular member.",
+  "@transferAdminConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorRemoving": "Error removing.",
+  "errorChangingRole": "Error changing role.",
+  "errorBanning": "Error banning.",
+  "errorTransferring": "Error transferring.",
+
+  "groupSettings": "Group Settings",
+  "changeName": "Change Name",
+  "newName": "New Name",
+  "errorRenaming": "Error renaming.",
+  "changeImage": "Change image",
+  "errorChangingImage": "Error changing image.",
+  "joinMode": "Join Mode",
+  "open": "Open",
+  "openSubtitle": "Anyone can join directly",
+  "requestMode": "Request",
+  "requestSubtitle": "Join by request – you decide",
+  "private": "Private",
+  "privateSubtitle": "Invite only – not visible in Discover",
+  "errorSaving": "Error saving.",
+  "bannedMembers": "Banned Members",
+  "deleteGroup": "Delete Group",
+
+  "confirmDeleteGroup": "Do you really want to delete \"{name}\"? This cannot be undone.",
+  "@confirmDeleteGroup": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorDeleting": "Error deleting.",
+  "nobodyBanned": "Nobody is banned.",
+  "errorUnbanning": "Error unbanning.",
+
+  "manageInvites": "Manage Invitations",
+  "enterName": "Enter name",
+  "nameHint": "e.g. Hannes",
+
+  "userNotFound": "User \"{name}\" not found.",
+  "@userNotFound": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorSearching": "Error searching.",
+  "cantInviteYourself": "You can't invite yourself.",
+
+  "alreadyMember": "\"{name}\" is already a member.",
+  "@alreadyMember": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "alreadyInvited": "\"{name}\" has already been invited.",
+  "@alreadyInvited": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "inviteSent": "Invitation sent to \"{name}\".",
+  "@inviteSent": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorSendingInvite": "Error sending invitation.",
+  "invitedPeople": "Invited People",
+  "noneInvitedYet": "Nobody invited yet.",
+
+  "errorLoadingMessages": "Error loading messages",
+  "errorLoadingOlderMessages": "Error loading older messages",
+  "noMessages": "No messages yet",
+  "beFirst": "Be the first to write something!",
+  "writeMessage": "Write a message...",
+
+  "settingsTitle": "Settings",
+  "editProfile": "Edit Profile",
+  "appUpdate": "App Update",
+  "alreadyUpToDate": "You are already using the latest version.",
+
+  "updateAvailable": "Update available – v{version}",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+
+  "changes": "Changes:",
+  "later": "Later",
+  "installNow": "Install now",
+  "signOut": "Sign out",
+  "deleteAccount": "Delete account",
+  "confirmDeleteAccount": "Do you really want to permanently delete your account? All your data will be irreversibly removed.",
+  "reloginRequired": "Please sign in again and try again.",
+  "nameRequired": "Name cannot be empty",
+  "ageRequired": "Age cannot be empty",
+  "invalidAge": "Please enter a valid age",
+  "german": "Deutsch",
+  "english": "English",
+
+  "interestSportFitness": "Sports & Fitness",
+  "interestMusik": "Music",
+  "interestGaming": "Gaming",
+  "interestLesen": "Reading",
+  "interestKochen": "Cooking",
+  "interestReisen": "Travel",
+  "interestFotografie": "Photography",
+  "interestKunst": "Art",
+  "interestFilmSerien": "Film & TV",
+  "interestTechnologie": "Technology",
+  "interestNatur": "Nature",
+  "interestMode": "Fashion",
+  "interestYoga": "Yoga",
+  "interestTanzen": "Dancing",
+  "interestWissenschaft": "Science",
+  "interestGeschichte": "History",
+  "interestSprachen": "Languages",
+  "interestTiere": "Animals",
+  "interestDIY": "DIY",
+  "interestFinanzen": "Finance",
+  "interestPolitik": "Politics",
+  "interestPhilosophie": "Philosophy",
+  "interestFamilie": "Family",
+  "interestEhrenamt": "Volunteering",
+  "interestErnaehrung": "Nutrition"
+}

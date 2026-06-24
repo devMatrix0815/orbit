@@ -8,7 +8,8 @@ import 'package:orbit/screens/login_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:orbit/services/update_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:orbit/main.dart' show themeNotifier;
+import 'package:orbit/main.dart' show themeNotifier, localeNotifier;
+import 'package:orbit/l10n/app_localizations.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -22,11 +23,13 @@ class _SettingsState extends State<Settings> {
   double? _downloadProgress;
   String _currentVersion = '';
   bool _isDarkMode = false;
+  String _currentLocale = 'de';
 
   @override
   void initState() {
     super.initState();
     _isDarkMode = themeNotifier.value == ThemeMode.dark;
+    _currentLocale = localeNotifier.value.languageCode;
     UpdateService.currentVersion().then((v) {
       if (mounted) setState(() => _currentVersion = v);
     });
@@ -39,7 +42,13 @@ class _SettingsState extends State<Settings> {
     setState(() => _isDarkMode = isDark);
   }
 
-  // load current profile data and show edit sheet
+  Future<void> _switchLanguage(String langCode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('locale', langCode);
+    localeNotifier.value = Locale(langCode);
+    setState(() => _currentLocale = langCode);
+  }
+
   Future<void> _editProfile(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -77,7 +86,6 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  // sign out google and firebase then go to login
   Future<void> logout(BuildContext context) async {
     try {
       await GoogleSignIn().signOut();
@@ -91,30 +99,30 @@ class _SettingsState extends State<Settings> {
     }
   }
 
-  // delete account - removes owned circles, invites, firestore data and auth account
   Future<void> deleteAccount(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Konto löschen'),
-        content: const Text(
-          'Möchtest du dein Konto wirklich dauerhaft löschen? '
-          'Alle deine Daten werden unwiderruflich entfernt.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Abbrechen'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(ctx).colorScheme.error,
+      builder: (ctx) {
+        final l = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l.deleteAccount),
+          content: Text(l.confirmDeleteAccount),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l.cancel),
             ),
-            child: const Text('Löschen'),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(ctx).colorScheme.error,
+              ),
+              child: Text(l.delete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed != true || !context.mounted) return;
@@ -122,7 +130,6 @@ class _SettingsState extends State<Settings> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // delete owned circles and their invites
         final ownedCircles = await FirebaseFirestore.instance
             .collection('circles')
             .where('createdBy', isEqualTo: user.uid)
@@ -138,17 +145,14 @@ class _SettingsState extends State<Settings> {
           await doc.reference.delete();
         }
 
-        // delete firestore user document
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .delete();
 
-        // delete firebase auth account
         await user.delete();
       }
 
-      // google sign out
       try {
         await GoogleSignIn().signOut();
       } catch (_) {}
@@ -162,24 +166,20 @@ class _SettingsState extends State<Settings> {
     } on FirebaseAuthException catch (e) {
       if (!context.mounted) return;
 
-      // re-authentication required
       if (e.code == 'requires-recent-login') {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Bitte melde dich erneut an und versuche es nochmal.',
-            ),
-          ),
+          SnackBar(content: Text(l10n.reloginRequired)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler: ${e.message}')),
+          SnackBar(content: Text(l10n.generalError(e.message ?? ''))),
         );
       }
     }
   }
 
   Future<void> _checkForUpdate() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _checkingUpdate = true);
 
     try {
@@ -189,42 +189,45 @@ class _SettingsState extends State<Settings> {
 
       if (update == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Du verwendest bereits die neueste Version.')),
+          SnackBar(content: Text(l10n.alreadyUpToDate)),
         );
         return;
       }
 
       final install = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text('Update verfügbar – v${update.version}'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (update.releaseNotes.isNotEmpty) ...[
-                  const Text(
-                    'Änderungen:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(update.releaseNotes),
+        builder: (ctx) {
+          final l = AppLocalizations.of(ctx)!;
+          return AlertDialog(
+            title: Text(l.updateAvailable(update.version)),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (update.releaseNotes.isNotEmpty) ...[
+                    Text(
+                      l.changes,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(update.releaseNotes),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Später'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Jetzt installieren'),
-            ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: Text(l.later),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: Text(l.installNow),
+              ),
+            ],
+          );
+        },
       );
 
       if (install != true || !mounted) return;
@@ -241,12 +244,12 @@ class _SettingsState extends State<Settings> {
     } on DioException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Netzwerkfehler: ${e.message}')),
+        SnackBar(content: Text(l10n.networkError(e.message ?? ''))),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler: $e')),
+        SnackBar(content: Text(l10n.generalError(e.toString()))),
       );
     } finally {
       if (mounted) {
@@ -260,13 +263,15 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Einstellungen'),
+        title: Text(l10n.settingsTitle),
       ),
       body: Padding(
         padding: EdgeInsetsGeometry.all(18.0),
@@ -288,10 +293,45 @@ class _SettingsState extends State<Settings> {
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                     const SizedBox(width: 10),
-                    const Expanded(child: Text('Dark Mode')),
+                    Expanded(child: Text(l10n.darkMode)),
                     Switch(
                       value: _isDarkMode,
                       onChanged: _toggleTheme,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // language switcher
+            Card(
+              clipBehavior: Clip.hardEdge,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 10.0,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.language,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(l10n.language)),
+                    _LangChip(
+                      label: 'DE',
+                      selected: _currentLocale == 'de',
+                      onTap: () => _switchLanguage('de'),
+                    ),
+                    const SizedBox(width: 6),
+                    _LangChip(
+                      label: 'EN',
+                      selected: _currentLocale == 'en',
+                      onTap: () => _switchLanguage('en'),
                     ),
                   ],
                 ),
@@ -321,7 +361,7 @@ class _SettingsState extends State<Settings> {
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                             const SizedBox(width: 10),
-                            const Text('Profil bearbeiten'),
+                            Text(l10n.editProfile),
                           ],
                         ),
                       ),
@@ -360,10 +400,11 @@ class _SettingsState extends State<Settings> {
                                 Icon(
                                   Icons.system_update,
                                   size: 18,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                                 const SizedBox(width: 10),
-                                const Text('App-Update'),
+                                Text(l10n.appUpdate),
                                 if (_currentVersion.isNotEmpty) ...[
                                   const SizedBox(width: 8),
                                   Text(
@@ -440,7 +481,7 @@ class _SettingsState extends State<Settings> {
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                             const SizedBox(width: 10),
-                            const Text('Abmelden'),
+                            Text(l10n.signOut),
                           ],
                         ),
                       ),
@@ -478,7 +519,7 @@ class _SettingsState extends State<Settings> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              'Konto löschen',
+                              l10n.deleteAccount,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
                               ),
@@ -502,7 +543,47 @@ class _SettingsState extends State<Settings> {
   }
 }
 
-// bottom sheet to edit name and age
+class _LangChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LangChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? primary : Colors.grey[400]!,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? onPrimary : Colors.grey[700],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _EditProfileSheet extends StatefulWidget {
   final TextEditingController nameController;
   final TextEditingController ageController;
@@ -524,6 +605,8 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -537,45 +620,42 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Profil bearbeiten',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            Text(
+              l10n.editProfile,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             const SizedBox(height: 20),
 
-            // name field
             TextFormField(
               controller: widget.nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.nameLabel,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Name darf nicht leer sein' : null,
+                  (v == null || v.trim().isEmpty) ? l10n.nameRequired : null,
             ),
 
             const SizedBox(height: 16),
 
-            // age field
             TextFormField(
               controller: widget.ageController,
-              decoration: const InputDecoration(
-                labelText: 'Alter',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.ageLabel,
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Alter darf nicht leer sein';
+                if (v == null || v.isEmpty) return l10n.ageRequired;
                 final n = int.tryParse(v);
-                if (n == null || n < 13 || n > 120) return 'Bitte ein gültiges Alter eingeben';
+                if (n == null || n < 13 || n > 120) return l10n.invalidAge;
                 return null;
               },
             ),
 
             const SizedBox(height: 24),
 
-            // save button
             SizedBox(
               width: double.infinity,
               child: _saving
@@ -592,10 +672,11 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primary,
                       ),
                       child: Text(
-                        'Speichern',
+                        l10n.save,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onPrimary,
                           fontWeight: FontWeight.bold,

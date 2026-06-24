@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 import '../models/chat_message_model.dart';
 import '../services/chat_service.dart';
 import '../widgets/user_badges.dart';
@@ -36,37 +37,34 @@ class _ChatWidgetState extends State<ChatWidget> {
   }
 
   void _loadMessages() {
-    _chatService
-        .getMessages(widget.circleId)
-        .listen(
-          (messages) {
-            setState(() {
-              _messages = messages;
-              _isLoading = false;
-              if (messages.isNotEmpty) {
-                _lastTimestamp = messages.last.timestamp;
-              }
-            });
-            // Automatisch nach unten scrollen bei neuer Nachricht
-            if (messages.isNotEmpty && _scrollController.hasClients) {
-              _scrollController.animateTo(
-                0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-            }
-          },
-          onError: (error) {
-            setState(() => _isLoading = false);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Fehler beim Laden der Nachrichten'),
-                ),
-              );
-            }
-          },
-        );
+    _chatService.getMessages(widget.circleId).listen(
+      (messages) {
+        setState(() {
+          _messages = messages;
+          _isLoading = false;
+          if (messages.isNotEmpty) {
+            _lastTimestamp = messages.last.timestamp;
+          }
+        });
+        if (messages.isNotEmpty && _scrollController.hasClients) {
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      },
+      onError: (error) {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.errorLoadingMessages),
+            ),
+          );
+        }
+      },
+    );
   }
 
   Future<void> _loadMoreMessages() async {
@@ -89,8 +87,9 @@ class _ChatWidgetState extends State<ChatWidget> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Fehler beim Laden älterer Nachrichten'),
+          SnackBar(
+            content: Text(
+                AppLocalizations.of(context)!.errorLoadingOlderMessages),
           ),
         );
       }
@@ -107,9 +106,11 @@ class _ChatWidgetState extends State<ChatWidget> {
       _messageController.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Fehler beim Senden: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.sendError(e.toString())),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -118,9 +119,10 @@ class _ChatWidgetState extends State<ChatWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       children: [
-        // Nachrichtenliste
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -136,13 +138,15 @@ class _ChatWidgetState extends State<ChatWidget> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Noch keine Nachrichten',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        l10n.noMessages,
+                        style: TextStyle(
+                            fontSize: 16, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Sei der Erste, der etwas schreibt!',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                        l10n.beFirst,
+                        style: TextStyle(
+                            fontSize: 14, color: Colors.grey[500]),
                       ),
                     ],
                   ),
@@ -177,13 +181,12 @@ class _ChatWidgetState extends State<ChatWidget> {
                 ),
         ),
 
-        // Eingabebereich
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -196,7 +199,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                 child: TextField(
                   controller: _messageController,
                   decoration: InputDecoration(
-                    hintText: 'Nachricht schreiben...',
+                    hintText: l10n.writeMessage,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
@@ -243,15 +246,39 @@ class _ChatWidgetState extends State<ChatWidget> {
   }
 }
 
-// Individuelle Nachrichtenblase
 class _MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final bool isOwnMessage;
 
   const _MessageBubble({required this.message, required this.isOwnMessage});
 
+  String _formatTime(DateTime time, AppLocalizations l10n) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inDays == 0) {
+      return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    } else if (difference.inDays == 1) {
+      return l10n.yesterday;
+    } else if (difference.inDays < 7) {
+      return [
+        l10n.monday,
+        l10n.tuesday,
+        l10n.wednesday,
+        l10n.thursday,
+        l10n.friday,
+        l10n.saturday,
+        l10n.sunday,
+      ][time.weekday - 1];
+    } else {
+      return '${time.day}.${time.month}.${time.year}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -307,17 +334,18 @@ class _MessageBubble extends StatelessWidget {
                       Text(
                         message.text,
                         style: TextStyle(
-                          color: isOwnMessage ? Colors.white : Colors.black87,
+                          color:
+                              isOwnMessage ? Colors.white : Colors.black87,
                           fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _formatTime(message.timestamp),
+                        _formatTime(message.timestamp, l10n),
                         style: TextStyle(
                           fontSize: 10,
                           color: isOwnMessage
-                              ? Colors.white.withOpacity(0.7)
+                              ? Colors.white.withValues(alpha: 0.7)
                               : Colors.grey[600],
                         ),
                       ),
@@ -354,29 +382,6 @@ class _MessageBubble extends StatelessWidget {
         backgroundColor: Colors.grey[300],
         child: Icon(Icons.person, size: 16, color: Colors.grey[600]),
       );
-    }
-  }
-
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final difference = now.difference(time);
-
-    if (difference.inDays == 0) {
-      return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-    } else if (difference.inDays == 1) {
-      return 'Gestern';
-    } else if (difference.inDays < 7) {
-      return [
-        'Montag',
-        'Dienstag',
-        'Mittwoch',
-        'Donnerstag',
-        'Freitag',
-        'Samstag',
-        'Sonntag',
-      ][time.weekday - 1];
-    } else {
-      return '${time.day}.${time.month}.${time.year}';
     }
   }
 }

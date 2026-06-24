@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 import 'package:orbit/screens/main_screen.dart';
 import 'package:orbit/screens/setup_profile_screen.dart';
 
-// login screen with google sign-in
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -27,27 +27,16 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Google Sign-In
-      print('🔵 Google Sign-In wird gestartet...');
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
-        print('⚠️ User hat Sign-In abgebrochen');
         setState(() => _isLoading = false);
         return;
       }
 
-      print('✅ Google Sign-In erfolgreich: ${googleUser.email}');
-
-      // 2. get authentication details
-      print('🔵 Authentifizierung wird geholt...');
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      print('✅ Auth Details geholt - accessToken: ${googleAuth.accessToken?.substring(0, 20)}...');
-
-      // 3. firebase auth
-      print('🔵 Firebase Auth wird gestartet...');
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -57,10 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
           await _auth.signInWithCredential(credential);
       final User? user = userCredential.user;
 
-      print('✅ Firebase Auth erfolgreich - User UID: ${user?.uid}');
-
       if (user != null && mounted) {
-        // check if profile is complete
         final doc = await _firestore.collection('users').doc(user.uid).get();
         final data = doc.data();
         if (!mounted) return;
@@ -78,13 +64,11 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } on Exception catch (e) {
-      print('❌ Fehler: $e');
-      print('Fehlertyp: ${e.runtimeType}');
-
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login fehlgeschlagen: $e'),
+            content: Text(l10n.loginFailed(e.toString())),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -99,6 +83,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -106,7 +92,6 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // app logo
               Image.asset(
                 'assets/icon.png',
                 width: 200,
@@ -114,13 +99,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 40),
 
-              // loading or sign in button
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton.icon(
                       onPressed: _handleGoogleSignIn,
                       icon: const Icon(Icons.login),
-                      label: const Text('Mit Google anmelden'),
+                      label: Text(l10n.signInWithGoogle),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,

@@ -1,0 +1,371 @@
+{
+  "@@locale": "de",
+
+  "cancel": "Abbrechen",
+  "save": "Speichern",
+  "delete": "Löschen",
+  "edit": "Bearbeiten",
+  "retry": "Erneut versuchen",
+  "camera": "Kamera",
+  "gallery": "Galerie",
+  "unknown": "Unbekannt",
+  "interests": "Interessen",
+  "editInterests": "Interessen bearbeiten",
+  "interestsTip": "Tippe auf ein Interesse um es hinzuzufügen oder zu entfernen.",
+  "pleaseSelectInterest": "Bitte wähle mindestens ein Interesse.",
+  "noInterestsAdded": "Noch keine Interessen hinzugefügt.",
+  "all": "Alle",
+  "admin": "Admin",
+  "operator": "Operator",
+  "you": "Du",
+  "ban": "Bannen",
+  "unban": "Entbannen",
+  "leave": "Verlassen",
+  "transfer": "Übertragen",
+  "invite": "Einladen",
+  "accepted": "Akzeptiert",
+  "declined": "Abgelehnt",
+  "pending": "Ausstehend",
+  "nameLabel": "Name",
+  "ageLabel": "Alter",
+  "language": "Sprache",
+  "darkMode": "Dark Mode",
+  "yesterday": "Gestern",
+  "monday": "Montag",
+  "tuesday": "Dienstag",
+  "wednesday": "Mittwoch",
+  "thursday": "Donnerstag",
+  "friday": "Freitag",
+  "saturday": "Samstag",
+  "sunday": "Sonntag",
+
+  "memberCount": "{count} Mitglieder",
+  "@memberCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "ageYears": "{age} Jahre",
+  "@ageYears": {
+    "placeholders": {
+      "age": {"type": "int"}
+    }
+  },
+
+  "generalError": "Fehler: {message}",
+  "@generalError": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+
+  "networkError": "Netzwerkfehler: {message}",
+  "@networkError": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+
+  "sendError": "Fehler beim Senden: {error}",
+  "@sendError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "selectedCount": "{count} ausgewählt",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "membersWithCount": "Mitglieder ({count})",
+  "@membersWithCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "removeCount": "{count} entfernen",
+  "@removeCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "signInWithGoogle": "Mit Google anmelden",
+
+  "loginFailed": "Login fehlgeschlagen: {error}",
+  "@loginFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "setupProfile": "Erstelle dein Profil",
+  "setupProfileSubtitle": "Wie sollen andere dich sehen?",
+  "next": "Weiter",
+  "yourInterests": "Deine Interessen",
+  "selectAtLeastOneInterest": "Wähle mindestens ein Interesse aus.",
+  "createProfile": "Profil erstellen",
+  "pleaseEnterName": "Bitte gib deinen Namen ein.",
+  "pleaseEnterValidAge": "Bitte gib ein gültiges Alter ein.",
+
+  "myCircles": "Meine Kreise",
+  "searchCircles": "Kreise suchen...",
+  "createNewCircle": "Neuen Kreis erstellen",
+  "selectImage": "Bild auswählen",
+  "circleNameLabel": "Kreisname",
+  "circleNameHint": "z.B. Besties, Fotografie, Running...",
+  "pleaseEnterCircleName": "Bitte einen Namen eingeben.",
+  "nameTooShort": "Name muss mindestens 2 Zeichen haben.",
+  "categorySelectHint": "Kategorie (mind. 1 auswählen)",
+  "selectAtLeastOneCategory": "Wähle mindestens eine Kategorie.",
+  "createCircle": "Kreis erstellen",
+  "errorCreatingCircle": "Fehler beim Erstellen des Kreises.",
+  "errorLoadingCircles": "Fehler beim Laden der Kreise.",
+  "removeFromTop": "Von Top-Kreise entfernen",
+  "addToTop": "Zu Top-Kreise hinzufügen",
+  "topCircles": "Top-Kreise",
+  "allCircles": "Alle Kreise",
+  "yourCircles": "Deine Kreise",
+  "noCirclesYet": "Du bist noch in keinem Kreis.\nEntdecke neue Gruppen!",
+  "noCirclesFound": "Keine Kreise gefunden.",
+
+  "discover": "Entdecken",
+  "searchGroups": "Suche nach Gruppen...",
+  "filterByCategory": "Nach Kategorie filtern",
+  "recommendedGroups": "Empfohlene Gruppen",
+  "noGroupsFound": "Keine Gruppen gefunden.",
+  "showMore": "Mehr anzeigen",
+
+  "notifications": "Benachrichtigungen",
+  "errorLoadingNotifications": "Fehler beim Laden der Benachrichtigungen.",
+  "noNotifications": "Keine neuen Benachrichtigungen.",
+
+  "inviteToCircle": "Einladung zum Kreis \"{name}\"",
+  "@inviteToCircle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "youWereInvited": "Du wurdest in diesen Kreis eingeladen.",
+  "decline": "Ablehnen",
+  "accept": "Annehmen",
+
+  "joinedCircle": "Du bist jetzt in \"{name}\"!",
+  "@joinedCircle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorAccepting": "Fehler beim Annehmen.",
+  "errorDeclining": "Fehler beim Ablehnen.",
+
+  "wantsToJoin": "{name} möchte beitreten",
+  "@wantsToJoin": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "joinRequestFor": "Beitrittsanfrage für \"{name}\"",
+  "@joinRequestFor": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "memberAdded": "{name} wurde aufgenommen!",
+  "@memberAdded": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "myProfile": "Mein Profil",
+  "errorChangingProfilePicture": "Fehler beim Ändern des Profilbildes.",
+
+  "errorJoining": "Fehler beim Beitreten.",
+  "requestSentSuccess": "Anfrage gesendet!",
+  "errorSendingRequest": "Fehler beim Senden der Anfrage.",
+  "leaveGroup": "Gruppe verlassen",
+
+  "confirmLeave": "Möchtest du \"{name}\" wirklich verlassen?",
+  "@confirmLeave": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorLeavingGroup": "Fehler beim Verlassen der Gruppe.",
+  "members": "Mitglieder",
+  "invitePeople": "Leute einladen",
+  "settings": "Einstellungen",
+  "joinGroup": "Gruppe beitreten",
+  "requestSent": "Anfrage gesendet",
+  "sendJoinRequest": "Beitrittsanfrage senden",
+  "inviteOnly": "Nur auf Einladung",
+  "removeOperatorLabel": "Operator\nentfernen",
+  "makeOperatorLabel": "Zum Operator\nmachen",
+  "transferAdminLabel": "Admin\nübertragen",
+  "banMember": "Mitglied bannen?",
+
+  "banMembers": "{count} Mitglieder bannen?",
+  "@banMembers": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "banConfirmSingle": "Diese Person wird entfernt und kann der Gruppe nicht mehr beitreten.",
+
+  "banConfirmMultiple": "{count} Personen werden entfernt und können der Gruppe nicht mehr beitreten.",
+  "@banConfirmMultiple": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "transferAdminTitle": "Admin übertragen",
+
+  "transferAdminConfirm": "{name} wird zum neuen Admin. Du verlierst deine Admin-Rechte und wirst normales Mitglied.",
+  "@transferAdminConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorRemoving": "Fehler beim Entfernen.",
+  "errorChangingRole": "Fehler beim Ändern der Rolle.",
+  "errorBanning": "Fehler beim Bannen.",
+  "errorTransferring": "Fehler beim Übertragen.",
+
+  "groupSettings": "Gruppeneinstellungen",
+  "changeName": "Namen ändern",
+  "newName": "Neuer Name",
+  "errorRenaming": "Fehler beim Umbenennen.",
+  "changeImage": "Bild ändern",
+  "errorChangingImage": "Fehler beim Ändern des Bildes.",
+  "joinMode": "Beitrittsart",
+  "open": "Offen",
+  "openSubtitle": "Jeder kann direkt beitreten",
+  "requestMode": "Anfrage",
+  "requestSubtitle": "Beitritt per Anfrage – du entscheidest",
+  "private": "Privat",
+  "privateSubtitle": "Nur Eingeladene – nicht in Entdecken sichtbar",
+  "errorSaving": "Fehler beim Speichern.",
+  "bannedMembers": "Gebannte Mitglieder",
+  "deleteGroup": "Gruppe löschen",
+
+  "confirmDeleteGroup": "Möchtest du \"{name}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.",
+  "@confirmDeleteGroup": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorDeleting": "Fehler beim Löschen.",
+  "nobodyBanned": "Niemand ist gebannt.",
+  "errorUnbanning": "Fehler beim Entbannen.",
+
+  "manageInvites": "Einladungen verwalten",
+  "enterName": "Name eingeben",
+  "nameHint": "z.B. Hannes",
+
+  "userNotFound": "Nutzer \"{name}\" nicht gefunden.",
+  "@userNotFound": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorSearching": "Fehler bei der Suche.",
+  "cantInviteYourself": "Du kannst dich nicht selbst einladen.",
+
+  "alreadyMember": "\"{name}\" ist bereits Mitglied.",
+  "@alreadyMember": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "alreadyInvited": "\"{name}\" wurde bereits eingeladen.",
+  "@alreadyInvited": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "inviteSent": "Einladung an \"{name}\" gesendet.",
+  "@inviteSent": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "errorSendingInvite": "Fehler beim Senden der Einladung.",
+  "invitedPeople": "Eingeladene Personen",
+  "noneInvitedYet": "Noch niemand eingeladen.",
+
+  "errorLoadingMessages": "Fehler beim Laden der Nachrichten",
+  "errorLoadingOlderMessages": "Fehler beim Laden älterer Nachrichten",
+  "noMessages": "Noch keine Nachrichten",
+  "beFirst": "Sei der Erste, der etwas schreibt!",
+  "writeMessage": "Nachricht schreiben...",
+
+  "settingsTitle": "Einstellungen",
+  "editProfile": "Profil bearbeiten",
+  "appUpdate": "App-Update",
+  "alreadyUpToDate": "Du verwendest bereits die neueste Version.",
+
+  "updateAvailable": "Update verfügbar – v{version}",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+
+  "changes": "Änderungen:",
+  "later": "Später",
+  "installNow": "Jetzt installieren",
+  "signOut": "Abmelden",
+  "deleteAccount": "Konto löschen",
+  "confirmDeleteAccount": "Möchtest du dein Konto wirklich dauerhaft löschen? Alle deine Daten werden unwiderruflich entfernt.",
+  "reloginRequired": "Bitte melde dich erneut an und versuche es nochmal.",
+  "nameRequired": "Name darf nicht leer sein",
+  "ageRequired": "Alter darf nicht leer sein",
+  "invalidAge": "Bitte ein gültiges Alter eingeben",
+  "german": "Deutsch",
+  "english": "English",
+
+  "interestSportFitness": "Sport & Fitness",
+  "interestMusik": "Musik",
+  "interestGaming": "Gaming",
+  "interestLesen": "Lesen",
+  "interestKochen": "Kochen",
+  "interestReisen": "Reisen",
+  "interestFotografie": "Fotografie",
+  "interestKunst": "Kunst",
+  "interestFilmSerien": "Film & Serien",
+  "interestTechnologie": "Technologie",
+  "interestNatur": "Natur",
+  "interestMode": "Mode",
+  "interestYoga": "Yoga",
+  "interestTanzen": "Tanzen",
+  "interestWissenschaft": "Wissenschaft",
+  "interestGeschichte": "Geschichte",
+  "interestSprachen": "Sprachen",
+  "interestTiere": "Tiere",
+  "interestDIY": "DIY",
+  "interestFinanzen": "Finanzen",
+  "interestPolitik": "Politik",
+  "interestPhilosophie": "Philosophie",
+  "interestFamilie": "Familie",
+  "interestEhrenamt": "Ehrenamt",
+  "interestErnaehrung": "Ernährung"
+}

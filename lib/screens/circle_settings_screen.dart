@@ -3,11 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 import '../models/circle_model.dart';
 import '../constants/interests.dart';
 import '../widgets/user_badges.dart';
 
-// circle settings screen - change image, rename, delete
 class CircleSettingsScreen extends StatefulWidget {
   final Circle circle;
   final String initialName;
@@ -41,30 +41,33 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     }
   }
 
-  // rename circle with a dialog
   Future<void> _showRenameDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: _name);
     final newName = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Namen ändern'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(hintText: 'Neuer Name'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Abbrechen'),
+      builder: (context) {
+        final l = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(l.changeName),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(hintText: l.newName),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Speichern'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              child: Text(l.save),
+            ),
+          ],
+        );
+      },
     );
 
     if (newName == null || newName.isEmpty) return;
@@ -78,13 +81,12 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Umbenennen.')),
+          SnackBar(content: Text(l10n.errorRenaming)),
         );
       }
     }
   }
 
-  // pick new group image from camera or gallery
   Future<void> _pickImage() async {
     if (_isPickingImage) return;
 
@@ -93,34 +95,37 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) {
+        final l = AppLocalizations.of(context)!;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined),
-              title: const Text('Kamera'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Galerie'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined),
+                title: Text(l.camera),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(l.gallery),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
 
     if (source == null) return;
@@ -143,7 +148,9 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Ändern des Bildes.')),
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.errorChangingImage)),
         );
       }
     } finally {
@@ -151,7 +158,6 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     }
   }
 
-  // show bottom sheet to manage circle interests/tags — matches profile design
   Future<void> _showInterestsSheet() async {
     await showModalBottomSheet(
       context: context,
@@ -172,7 +178,6 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     );
   }
 
-  // show bottom sheet with all banned users
   Future<void> _showBannedSheet() async {
     await showModalBottomSheet(
       context: context,
@@ -184,33 +189,33 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     );
   }
 
-  // delete circle and all its invites
   Future<void> _deleteGroup() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Gruppe löschen'),
-        content: Text(
-          'Möchtest du "$_name" wirklich löschen? Das kann nicht rückgängig gemacht werden.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Abbrechen'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Löschen'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(l.deleteGroup),
+          content: Text(l.confirmDeleteGroup(_name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text(l.delete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed != true) return;
 
     try {
-      // delete all invites first
       final invites = await FirebaseFirestore.instance
           .collection('invites')
           .where('circleId', isEqualTo: widget.circle.id)
@@ -219,7 +224,6 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
         await doc.reference.delete();
       }
 
-      // delete the circle
       await FirebaseFirestore.instance
           .collection('circles')
           .doc(widget.circle.id)
@@ -229,7 +233,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Löschen.')),
+          SnackBar(content: Text(l10n.errorDeleting)),
         );
       }
     }
@@ -245,19 +249,21 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Speichern.')),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!.errorSaving)),
         );
       }
     }
   }
 
-  // return updated name when navigating back
   void _popWithResult() {
     Navigator.pop(context, {'name': _name, 'tags': _tags});
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -265,7 +271,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Gruppeneinstellungen'),
+          title: Text(l10n.groupSettings),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _popWithResult,
@@ -273,7 +279,6 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
         ),
         body: ListView(
           children: [
-            // image preview / picker
             GestureDetector(
               onTap: _pickImage,
               child: SizedBox(
@@ -295,19 +300,19 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Center(
+                          : Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.camera_alt_outlined,
                                     color: Colors.white,
                                     size: 36,
                                   ),
-                                  SizedBox(height: 6),
+                                  const SizedBox(height: 6),
                                   Text(
-                                    'Bild ändern',
-                                    style: TextStyle(
+                                    l10n.changeImage,
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 14,
                                     ),
@@ -323,16 +328,14 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
 
             const SizedBox(height: 8),
 
-            // rename
             ListTile(
               leading: const Icon(Icons.edit_outlined),
-              title: const Text('Namen ändern'),
+              title: Text(l10n.changeName),
               subtitle: Text(_name),
               trailing: const Icon(Icons.chevron_right),
               onTap: _showRenameDialog,
             ),
 
-            // interests section — matches profile design
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Column(
@@ -341,9 +344,9 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Interessen',
-                        style: TextStyle(
+                      Text(
+                        l10n.interests,
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -356,7 +359,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
                         ),
                         onPressed: _showInterestsSheet,
                         label: Text(
-                          'Bearbeiten',
+                          l10n.edit,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary,
                           ),
@@ -367,7 +370,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
                   const SizedBox(height: 8),
                   if (_tags.isEmpty)
                     Text(
-                      'Noch keine Interessen hinzugefügt.',
+                      l10n.noInterestsAdded,
                       style: TextStyle(color: Colors.grey[600]),
                     )
                   else
@@ -383,7 +386,7 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
                             238,
                           ),
                           label: Text(
-                            tag,
+                            getInterestName(tag, l10n),
                             style: const TextStyle(color: Colors.black),
                           ),
                           side: BorderSide.none,
@@ -396,12 +399,11 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
 
             const Divider(),
 
-            // join mode selector
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Text(
-                'Beitrittsart',
-                style: TextStyle(
+                l10n.joinMode,
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -409,44 +411,42 @@ class _CircleSettingsScreenState extends State<CircleSettingsScreen> {
             ),
             _JoinModeOption(
               icon: Icons.lock_open_outlined,
-              title: 'Offen',
-              subtitle: 'Jeder kann direkt beitreten',
+              title: l10n.open,
+              subtitle: l10n.openSubtitle,
               selected: _joinMode == 'open',
               onTap: () => _setJoinMode('open'),
             ),
             _JoinModeOption(
               icon: Icons.how_to_reg_outlined,
-              title: 'Anfrage',
-              subtitle: 'Beitritt per Anfrage – du entscheidest',
+              title: l10n.requestMode,
+              subtitle: l10n.requestSubtitle,
               selected: _joinMode == 'request',
               onTap: () => _setJoinMode('request'),
             ),
             _JoinModeOption(
               icon: Icons.lock_outlined,
-              title: 'Privat',
-              subtitle: 'Nur Eingeladene – nicht in Entdecken sichtbar',
+              title: l10n.private,
+              subtitle: l10n.privateSubtitle,
               selected: _joinMode == 'invite_only',
               onTap: () => _setJoinMode('invite_only'),
             ),
 
             const Divider(),
 
-            // banned members
             ListTile(
               leading: const Icon(Icons.block_outlined),
-              title: const Text('Gebannte Mitglieder'),
+              title: Text(l10n.bannedMembers),
               trailing: const Icon(Icons.chevron_right),
               onTap: _showBannedSheet,
             ),
 
             const Divider(),
 
-            // delete
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text(
-                'Gruppe löschen',
-                style: TextStyle(color: Colors.red),
+              title: Text(
+                l10n.deleteGroup,
+                style: const TextStyle(color: Colors.red),
               ),
               onTap: _deleteGroup,
             ),
@@ -493,7 +493,6 @@ class _JoinModeOption extends StatelessWidget {
   }
 }
 
-// bottom sheet listing banned users with unban option
 class _BannedSheet extends StatefulWidget {
   final String circleId;
   const _BannedSheet({required this.circleId});
@@ -551,7 +550,9 @@ class _BannedSheetState extends State<_BannedSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Entbannen.')),
+          SnackBar(
+              content:
+                  Text(AppLocalizations.of(context)!.errorUnbanning)),
         );
       }
     }
@@ -559,6 +560,8 @@ class _BannedSheetState extends State<_BannedSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -576,9 +579,10 @@ class _BannedSheetState extends State<_BannedSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              const Text(
-                'Gebannte Mitglieder',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              Text(
+                l10n.bannedMembers,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ],
           ),
@@ -593,7 +597,7 @@ class _BannedSheetState extends State<_BannedSheet> {
           Padding(
             padding: const EdgeInsets.all(32),
             child: Text(
-              'Niemand ist gebannt.',
+              l10n.nobodyBanned,
               style: TextStyle(color: Colors.grey[600]),
             ),
           )
@@ -608,7 +612,8 @@ class _BannedSheetState extends State<_BannedSheet> {
               itemBuilder: (context, index) {
                 final member = _banned[index];
                 final uid = member['uid'] as String;
-                final name = member['displayName'] as String? ?? 'Unbekannt';
+                final name =
+                    member['displayName'] as String? ?? l10n.unknown;
                 final badges = List<String>.from(member['badges'] ?? []);
                 final base64Str = member['profileImageBase64'] as String?;
                 final url = member['profileImageUrl'] as String?;
@@ -619,7 +624,8 @@ class _BannedSheetState extends State<_BannedSheet> {
                     backgroundImage: MemoryImage(base64Decode(base64Str)),
                   );
                 } else if (url != null && url.isNotEmpty) {
-                  avatar = CircleAvatar(backgroundImage: NetworkImage(url));
+                  avatar = CircleAvatar(
+                      backgroundImage: NetworkImage(url));
                 } else {
                   avatar = const CircleAvatar(
                     child: Icon(Icons.person_outline, size: 20),
@@ -631,7 +637,7 @@ class _BannedSheetState extends State<_BannedSheet> {
                   title: nameWithBadges(name, badges: badges),
                   trailing: TextButton(
                     onPressed: () => _unban(uid),
-                    child: const Text('Entbannen'),
+                    child: Text(AppLocalizations.of(context)!.unban),
                   ),
                 );
               },
@@ -643,7 +649,6 @@ class _BannedSheetState extends State<_BannedSheet> {
   }
 }
 
-// bottom sheet to edit circle interests — same design as profile
 class _InterestsSheet extends StatefulWidget {
   final Set<String> current;
   final Future<void> Function(Set<String>) onSave;
@@ -666,6 +671,8 @@ class _InterestsSheetState extends State<_InterestsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -677,13 +684,13 @@ class _InterestsSheetState extends State<_InterestsSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Interessen bearbeiten',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          Text(
+            l10n.editInterests,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 4),
           Text(
-            'Tippe auf ein Interesse um es hinzuzufügen oder zu entfernen.',
+            l10n.interestsTip,
             style: TextStyle(color: Colors.grey[600], fontSize: 13),
           ),
           const SizedBox(height: 16),
@@ -696,10 +703,11 @@ class _InterestsSheetState extends State<_InterestsSheet> {
                 children: kAllInterests.map((tag) {
                   final selected = _selected.contains(tag);
                   return FilterChip(
-                    backgroundColor: const Color.fromARGB(255, 238, 238, 238),
+                    backgroundColor:
+                        const Color.fromARGB(255, 238, 238, 238),
                     showCheckmark: false,
                     selectedColor: const Color(0xFFEEF0FB),
-                    label: Text(tag),
+                    label: Text(getInterestName(tag, l10n)),
                     selected: selected,
                     labelStyle: TextStyle(
                       color: selected
@@ -707,7 +715,8 @@ class _InterestsSheetState extends State<_InterestsSheet> {
                           : Colors.black,
                     ),
                     side: selected
-                        ? const BorderSide(color: Color(0xFFC5CAE9), width: 1.5)
+                        ? const BorderSide(
+                            color: Color(0xFFC5CAE9), width: 1.5)
                         : BorderSide.none,
                     onSelected: (val) {
                       setState(() {
@@ -734,10 +743,8 @@ class _InterestsSheetState extends State<_InterestsSheet> {
                     onPressed: () async {
                       if (_selected.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Bitte wähle mindestens ein Interesse.',
-                            ),
+                          SnackBar(
+                            content: Text(l10n.pleaseSelectInterest),
                           ),
                         );
                         return;
@@ -748,10 +755,11 @@ class _InterestsSheetState extends State<_InterestsSheet> {
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primary,
                     ),
                     child: Text(
-                      'Speichern',
+                      l10n.save,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 import '../models/circle_model.dart';
 import '../constants/interests.dart';
 import 'circle_detail_screen.dart';
@@ -58,7 +59,6 @@ class _DiscoverState extends State<Discover> {
               c.joinMode != 'invite_only')
           .toList();
 
-      // Sort by number of matching interests (descending), then by memberCount
       circles.sort((a, b) {
         final aScore = a.tags.where((t) => interests.contains(t)).length;
         final bScore = b.tags.where((t) => interests.contains(t)).length;
@@ -88,7 +88,6 @@ class _DiscoverState extends State<Discover> {
     return circles;
   }
 
-  // User's interests first, then remaining tags
   List<String> get _sortedTags {
     final userTags = kAllInterests.where((t) => _userInterests.contains(t)).toList();
     final otherTags = kAllInterests.where((t) => !_userInterests.contains(t)).toList();
@@ -104,6 +103,7 @@ class _DiscoverState extends State<Discover> {
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheet) {
+          final l = AppLocalizations.of(ctx)!;
           return SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -122,9 +122,9 @@ class _DiscoverState extends State<Discover> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Nach Kategorie filtern',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    l.filterByCategory,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -132,7 +132,7 @@ class _DiscoverState extends State<Discover> {
                     runSpacing: 8,
                     children: [
                       FilterChip(
-                        label: const Text('Alle'),
+                        label: Text(l.all),
                         selected: _selectedTag == null,
                         onSelected: (_) {
                           setState(() {
@@ -143,7 +143,7 @@ class _DiscoverState extends State<Discover> {
                         },
                       ),
                       ...kAllInterests.map((tag) => FilterChip(
-                        label: Text(tag),
+                        label: Text(getInterestName(tag, l)),
                         selected: _selectedTag == tag,
                         onSelected: (_) {
                           setState(() {
@@ -164,7 +164,7 @@ class _DiscoverState extends State<Discover> {
     );
   }
 
-  Widget _buildTagCircle(String tag) {
+  Widget _buildTagCircle(String tag, AppLocalizations l10n) {
     final isSelected = _selectedTag == tag;
     final icon = kTagIcons[tag] ?? Icons.tag;
     final bgColor = kTagColors[tag] ?? const Color(0xFFF5F5F5);
@@ -195,7 +195,7 @@ class _DiscoverState extends State<Discover> {
             ),
             const SizedBox(height: 6),
             Text(
-              tag,
+              getInterestName(tag, l10n),
               maxLines: 2,
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
@@ -211,7 +211,7 @@ class _DiscoverState extends State<Discover> {
     );
   }
 
-  Widget _buildCircleCard(Circle circle) {
+  Widget _buildCircleCard(Circle circle, AppLocalizations l10n) {
     final imageBytes = circle.imageBase64 != null
         ? base64Decode(circle.imageBase64!)
         : null;
@@ -243,7 +243,6 @@ class _DiscoverState extends State<Discover> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image with gradient overlay
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: SizedBox(
@@ -259,11 +258,16 @@ class _DiscoverState extends State<Discover> {
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [accentColor, accentColor.withValues(alpha: 0.5)],
+                                colors: [
+                                  accentColor,
+                                  accentColor.withValues(alpha: 0.5),
+                                ],
                               ),
                             ),
                             child: Icon(
-                              kTagIcons[circle.tags.isNotEmpty ? circle.tags.first : ''] ??
+                              kTagIcons[circle.tags.isNotEmpty
+                                      ? circle.tags.first
+                                      : ''] ??
                                   Icons.group,
                               size: 44,
                               color: Colors.white.withValues(alpha: 0.45),
@@ -300,10 +304,11 @@ class _DiscoverState extends State<Discover> {
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              const Icon(Icons.group, color: Colors.white70, size: 13),
+                              const Icon(Icons.group,
+                                  color: Colors.white70, size: 13),
                               const SizedBox(width: 3),
                               Text(
-                                '${circle.memberCount} Mitglieder',
+                                l10n.memberCount(circle.memberCount),
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 11,
@@ -318,21 +323,29 @@ class _DiscoverState extends State<Discover> {
                 ),
               ),
             ),
-            // Tag chips
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
               child: Wrap(
                 spacing: 5,
                 runSpacing: 4,
-                children: circle.tags.take(3).map((tag) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: Text(tag, style: const TextStyle(fontSize: 10)),
-                )).toList(),
+                children: circle.tags
+                    .take(3)
+                    .map(
+                      (tag) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Text(
+                          getInterestName(tag, l10n),
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ],
@@ -343,6 +356,7 @@ class _DiscoverState extends State<Discover> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final filtered = _filteredCircles;
     final displayed = _showAll ? filtered : filtered.take(4).toList();
     final sortedTags = _sortedTags;
@@ -357,23 +371,24 @@ class _DiscoverState extends State<Discover> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   children: [
-                    // Page title
-                    const Text(
-                      'Entdecken',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    Text(
+                      l10n.discover,
+                      style: const TextStyle(
+                          fontSize: 28, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
 
-                    // Search bar + filter button
                     Row(
                       children: [
                         Expanded(
                           child: SearchBar(
                             controller: _searchController,
-                            hintText: 'Suche nach Gruppen...',
+                            hintText: l10n.searchGroups,
                             elevation: const WidgetStatePropertyAll(0),
-                            backgroundColor: WidgetStatePropertyAll(Colors.grey[100]),
-                            constraints: const BoxConstraints(minHeight: 48, maxHeight: 48),
+                            backgroundColor:
+                                WidgetStatePropertyAll(Colors.grey[100]),
+                            constraints: const BoxConstraints(
+                                minHeight: 48, maxHeight: 48),
                             shape: WidgetStatePropertyAll(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(32),
@@ -386,7 +401,8 @@ class _DiscoverState extends State<Discover> {
                               _searchQuery = v;
                               _showAll = false;
                             }),
-                            leading: const Icon(Icons.search, color: Colors.grey),
+                            leading: const Icon(Icons.search,
+                                color: Colors.grey),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -396,12 +412,16 @@ class _DiscoverState extends State<Discover> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: _selectedTag != null ? primaryColor : Colors.grey[100],
+                              color: _selectedTag != null
+                                  ? primaryColor
+                                  : Colors.grey[100],
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.tune,
-                              color: _selectedTag != null ? Colors.white : Colors.grey[700],
+                              color: _selectedTag != null
+                                  ? Colors.white
+                                  : Colors.grey[700],
                             ),
                           ),
                         ),
@@ -409,33 +429,35 @@ class _DiscoverState extends State<Discover> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Category circles (horizontal scroll)
                     SizedBox(
                       height: 108,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: sortedTags.length,
                         separatorBuilder: (_, _) => const SizedBox(width: 6),
-                        itemBuilder: (_, i) => _buildTagCircle(sortedTags[i]),
+                        itemBuilder: (_, i) =>
+                            _buildTagCircle(sortedTags[i], l10n),
                       ),
                     ),
                     const SizedBox(height: 24),
 
-                    // Section title
                     Text(
-                      _selectedTag ?? 'Empfohlene Gruppen',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      _selectedTag != null
+                          ? getInterestName(_selectedTag!, l10n)
+                          : l10n.recommendedGroups,
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
 
-                    // Grid of circles
                     if (displayed.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 32),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 32),
                         child: Center(
                           child: Text(
-                            'Keine Gruppen gefunden.',
-                            style: TextStyle(fontSize: 15, color: Colors.grey),
+                            l10n.noGroupsFound,
+                            style: const TextStyle(
+                                fontSize: 15, color: Colors.grey),
                           ),
                         ),
                       )
@@ -443,17 +465,18 @@ class _DiscoverState extends State<Discover> {
                       GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                           mainAxisExtent: 200,
                         ),
                         itemCount: displayed.length,
-                        itemBuilder: (_, i) => _buildCircleCard(displayed[i]),
+                        itemBuilder: (_, i) =>
+                            _buildCircleCard(displayed[i], l10n),
                       ),
 
-                    // Mehr anzeigen
                     if (!_showAll && filtered.length > 4)
                       Padding(
                         padding: const EdgeInsets.only(top: 20),
@@ -463,7 +486,7 @@ class _DiscoverState extends State<Discover> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Mehr anzeigen',
+                                l10n.showMore,
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -471,7 +494,8 @@ class _DiscoverState extends State<Discover> {
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              Icon(Icons.keyboard_arrow_down, color: primaryColor),
+                              Icon(Icons.keyboard_arrow_down,
+                                  color: primaryColor),
                             ],
                           ),
                         ),

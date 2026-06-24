@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 import '../models/invite_model.dart';
 import '../widgets/user_badges.dart';
 
-// screen to search and invite users to a circle
 class InviteMembersScreen extends StatefulWidget {
   final String circleId;
   final String circleName;
@@ -47,7 +47,6 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     super.dispose();
   }
 
-  // load existing invites for this circle
   Future<void> _loadInvites() async {
     setState(() => _isLoading = true);
     final snapshot = await FirebaseFirestore.instance
@@ -66,8 +65,8 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     });
   }
 
-  // search user by exact display name (case insensitive)
   Future<void> _searchUser() async {
+    final l10n = AppLocalizations.of(context)!;
     final input = _nameController.text.trim();
     if (input.isEmpty) return;
 
@@ -85,49 +84,46 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        setState(() => _searchError = 'Nutzer "$input" nicht gefunden.');
+        setState(() => _searchError = l10n.userNotFound(input));
         return;
       }
 
       final doc = snapshot.docs.first;
       setState(() => _foundUser = {'uid': doc.id, ...doc.data()});
     } catch (e) {
-      setState(() => _searchError = 'Fehler bei der Suche.');
+      setState(() => _searchError = AppLocalizations.of(context)!.errorSearching);
     } finally {
       if (mounted) setState(() => _isSearching = false);
     }
   }
 
-  // send invite with duplicate and membership checks
   Future<void> _sendInvite() async {
     if (_foundUser == null) return;
+    final l10n = AppLocalizations.of(context)!;
     final currentUid = FirebaseAuth.instance.currentUser!.uid;
     final targetUid = _foundUser!['uid'] as String;
     final targetDisplayName = _foundUser!['displayName'] as String? ?? '';
 
-    // can't invite yourself
     if (targetUid == currentUid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Du kannst dich nicht selbst einladen.')),
+        SnackBar(content: Text(l10n.cantInviteYourself)),
       );
       return;
     }
 
-    // already a member
     if (widget.members.contains(targetUid)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"$targetDisplayName" ist bereits Mitglied.')),
+        SnackBar(content: Text(l10n.alreadyMember(targetDisplayName))),
       );
       return;
     }
 
-    // already invited
     final alreadyInvited = _invites.any(
       (inv) => inv.invitedUserId == targetUid && inv.status == 'pending',
     );
     if (alreadyInvited) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"$targetDisplayName" wurde bereits eingeladen.')),
+        SnackBar(content: Text(l10n.alreadyInvited(targetDisplayName))),
       );
       return;
     }
@@ -137,30 +133,37 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
       await FirebaseFirestore.instance.collection('invites').add({
         'invitedUserId': targetUid,
         'invitedDisplayName': targetDisplayName,
-        if (_foundUser!['profileImageBase64'] != null) 'invitedProfileImageBase64': _foundUser!['profileImageBase64'],
-        if (_foundUser!['profileImageUrl'] != null) 'invitedProfileImageUrl': _foundUser!['profileImageUrl'],
+        if (_foundUser!['profileImageBase64'] != null)
+          'invitedProfileImageBase64': _foundUser!['profileImageBase64'],
+        if (_foundUser!['profileImageUrl'] != null)
+          'invitedProfileImageUrl': _foundUser!['profileImageUrl'],
         'invitedBy': currentUid,
         'invitedAt': FieldValue.serverTimestamp(),
         'status': 'pending',
         'circleId': widget.circleId,
         'circleName': widget.circleName,
-        if (widget.circleImageBase64 != null) 'circleImageBase64': widget.circleImageBase64,
-        if (widget.circleImageUrl != null) 'circleImageUrl': widget.circleImageUrl,
+        if (widget.circleImageBase64 != null)
+          'circleImageBase64': widget.circleImageBase64,
+        if (widget.circleImageUrl != null)
+          'circleImageUrl': widget.circleImageUrl,
       });
 
       _nameController.clear();
       setState(() => _foundUser = null);
 
       if (mounted) {
+        final l10n2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Einladung an "$targetDisplayName" gesendet.')),
+          SnackBar(content: Text(l10n2.inviteSent(targetDisplayName))),
         );
       }
       await _loadInvites();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Senden der Einladung.')),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.errorSendingInvite),
+          ),
         );
       }
     } finally {
@@ -168,7 +171,6 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     }
   }
 
-  // user avatar - base64, url or placeholder
   Widget _buildUserAvatar(Map<String, dynamic> user) {
     final base64 = user['profileImageBase64'] as String?;
     final url = user['profileImageUrl'] as String?;
@@ -183,30 +185,29 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     return const CircleAvatar(child: Icon(Icons.person_outline));
   }
 
-  // colored status chip for pending / accepted / declined
-  Widget _buildStatusChip(String status) {
+  Widget _buildStatusChip(String status, AppLocalizations l10n) {
     switch (status) {
       case 'accepted':
-        return const Chip(
-          label: Text('Akzeptiert'),
-          avatar: Icon(Icons.check_circle, size: 16, color: Colors.green),
-          labelStyle: TextStyle(color: Colors.green, fontSize: 12),
+        return Chip(
+          label: Text(l10n.accepted),
+          avatar: const Icon(Icons.check_circle, size: 16, color: Colors.green),
+          labelStyle: const TextStyle(color: Colors.green, fontSize: 12),
           padding: EdgeInsets.zero,
           visualDensity: VisualDensity.compact,
         );
       case 'declined':
-        return const Chip(
-          label: Text('Abgelehnt'),
-          avatar: Icon(Icons.cancel, size: 16, color: Colors.red),
-          labelStyle: TextStyle(color: Colors.red, fontSize: 12),
+        return Chip(
+          label: Text(l10n.declined),
+          avatar: const Icon(Icons.cancel, size: 16, color: Colors.red),
+          labelStyle: const TextStyle(color: Colors.red, fontSize: 12),
           padding: EdgeInsets.zero,
           visualDensity: VisualDensity.compact,
         );
       default:
-        return const Chip(
-          label: Text('Ausstehend'),
-          avatar: Icon(Icons.schedule, size: 16, color: Colors.orange),
-          labelStyle: TextStyle(color: Colors.orange, fontSize: 12),
+        return Chip(
+          label: Text(l10n.pending),
+          avatar: const Icon(Icons.schedule, size: 16, color: Colors.orange),
+          labelStyle: const TextStyle(color: Colors.orange, fontSize: 12),
           padding: EdgeInsets.zero,
           visualDensity: VisualDensity.compact,
         );
@@ -215,22 +216,23 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Einladungen verwalten')),
+      appBar: AppBar(title: Text(l10n.manageInvites)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // search row
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _nameController,
                     decoration: InputDecoration(
-                      labelText: 'Name eingeben',
-                      hintText: 'z.B. Hannes',
+                      labelText: l10n.enterName,
+                      hintText: l10n.nameHint,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -272,7 +274,6 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
 
             const SizedBox(height: 12),
 
-            // search result
             if (_searchError != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
@@ -305,16 +306,15 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Einladen'),
+                        : Text(l10n.invite),
                   ),
                 ),
               ),
 
             const SizedBox(height: 8),
 
-            // invited users list
             Text(
-              'Eingeladene Personen',
+              l10n.invitedPeople,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -324,10 +324,10 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _invites.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'Noch niemand eingeladen.',
-                            style: TextStyle(color: Colors.grey),
+                            l10n.noneInvitedYet,
+                            style: const TextStyle(color: Colors.grey),
                           ),
                         )
                       : ListView.separated(
@@ -338,11 +338,12 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               leading: _buildUserAvatar({
-                                'profileImageBase64': invite.invitedProfileImageBase64,
+                                'profileImageBase64':
+                                    invite.invitedProfileImageBase64,
                                 'profileImageUrl': invite.invitedProfileImageUrl,
                               }),
                               title: Text(invite.invitedDisplayName),
-                              trailing: _buildStatusChip(invite.status),
+                              trailing: _buildStatusChip(invite.status, l10n),
                             );
                           },
                         ),

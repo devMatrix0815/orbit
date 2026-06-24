@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-
-// packages
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:orbit/l10n/app_localizations.dart';
+import 'package:orbit/main.dart' show localeNotifier;
 import 'package:orbit/screens/main_screen.dart';
 import '../constants/interests.dart';
 
-// two step profile setup - step 1: name and age, step 2: interests
 class SetupProfileScreen extends StatefulWidget {
   const SetupProfileScreen({super.key});
 
@@ -17,9 +17,17 @@ class SetupProfileScreen extends StatefulWidget {
 class _SetupProfileScreenState extends State<SetupProfileScreen> {
   final PageController _pageController = PageController();
   bool _isLoading = false;
+  String _currentLocale = localeNotifier.value.languageCode;
 
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
+
+  Future<void> _switchLanguage(String langCode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('locale', langCode);
+    localeNotifier.value = Locale(langCode);
+    if (mounted) setState(() => _currentLocale = langCode);
+  }
 
   final Set<String> _selectedInterests = {};
 
@@ -31,11 +39,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     super.dispose();
   }
 
-  // validate step 1 and go to step 2
   void _goToPage2() {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte gib deinen Namen ein.')),
+        SnackBar(content: Text(l10n.pleaseEnterName)),
       );
       return;
     }
@@ -43,7 +52,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     final age = int.tryParse(_ageController.text.trim());
     if (age == null || age < 1 || age > 120) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte gib ein gültiges Alter ein.')),
+        SnackBar(content: Text(l10n.pleaseEnterValidAge)),
       );
       return;
     }
@@ -54,11 +63,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     );
   }
 
-  // save profile to firestore and navigate to main screen
   Future<void> _saveProfile() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_selectedInterests.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte wähle mindestens ein Interesse.')),
+        SnackBar(content: Text(l10n.pleaseSelectInterest)),
       );
       return;
     }
@@ -91,9 +101,10 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n2 = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+        ).showSnackBar(SnackBar(content: Text(l10n2.generalError(e.toString()))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -114,38 +125,41 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   }
 
   Widget _buildPage1() {
+    final l10n = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
 
     return Padding(
       padding: const EdgeInsets.all(24),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // progress bar
           _buildProgress(1),
-
           const SizedBox(height: 32),
 
-          // title
           Text(
-            'Erstelle dein Profil',
+            l10n.setupProfile,
             style: Theme.of(
               context,
             ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
-
           const SizedBox(height: 8),
           Text(
-            'Wie sollen andere dich sehen?',
+            l10n.setupProfileSubtitle,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
           ),
+          const SizedBox(height: 20),
 
-          const SizedBox(height: 48),
+          Row(
+            children: [
+              _buildLangChip('DE', _currentLocale == 'de', () => _switchLanguage('de')),
+              const SizedBox(width: 8),
+              _buildLangChip('EN', _currentLocale == 'en', () => _switchLanguage('en')),
+            ],
+          ),
+          const SizedBox(height: 28),
 
-          // profile picture
           Center(
             child: CircleAvatar(
               radius: 50,
@@ -157,19 +171,16 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   : null,
             ),
           ),
-
           const SizedBox(height: 48),
 
-          // name field
           TextField(
             controller: _nameController,
             decoration: InputDecoration(
-              labelText: 'Name',
+              labelText: l10n.nameLabel,
               prefixIcon: Icon(
                 Icons.person_outline,
                 color: Theme.of(context).colorScheme.outline,
               ),
-
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
@@ -177,7 +188,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   width: 1.5,
                 ),
               ),
-
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
@@ -188,19 +198,16 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             ),
             textCapitalization: TextCapitalization.words,
           ),
-
           const SizedBox(height: 16),
 
-          // age field
           TextField(
             controller: _ageController,
             decoration: InputDecoration(
-              labelText: 'Alter',
+              labelText: l10n.ageLabel,
               prefixIcon: Icon(
                 Icons.cake,
                 color: Theme.of(context).colorScheme.outline,
               ),
-
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
@@ -208,7 +215,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   width: 1.5,
                 ),
               ),
-
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
@@ -222,10 +228,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
           const Spacer(),
 
-          // next button
           SizedBox(
             width: double.infinity,
-
             child: ElevatedButton(
               onPressed: _goToPage2,
               style: ElevatedButton.styleFrom(
@@ -233,7 +237,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 backgroundColor: Theme.of(context).colorScheme.primary,
               ),
               child: Text(
-                'Weiter',
+                l10n.next,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,
@@ -247,16 +251,15 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   }
 
   Widget _buildPage2() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: const EdgeInsets.all(24),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
           Row(
             children: [
-              // back button
               IconButton(
                 onPressed: () => _pageController.previousPage(
                   duration: const Duration(milliseconds: 350),
@@ -265,36 +268,28 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 icon: const Icon(Icons.arrow_back),
                 padding: EdgeInsets.zero,
               ),
-
               const SizedBox(width: 8),
-
-              // progress bar
               Expanded(child: _buildProgress(2)),
             ],
           ),
-
           const SizedBox(height: 24),
 
-          // title
           Text(
-            'Deine Interessen',
+            l10n.yourInterests,
             style: Theme.of(
               context,
             ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
-
           const SizedBox(height: 8),
 
           Text(
-            'Wähle mindestens ein Interesse aus.',
+            l10n.selectAtLeastOneInterest,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
           ),
-
           const SizedBox(height: 24),
 
-          // interest chips
           Expanded(
             child: SingleChildScrollView(
               child: Wrap(
@@ -306,9 +301,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     backgroundColor: const Color.fromARGB(255, 238, 238, 238),
                     showCheckmark: false,
                     selectedColor: const Color(0xFFEEF0FB),
-                    label: Text(interest),
+                    label: Text(getInterestName(interest, l10n)),
                     selected: selected,
-
                     color: WidgetStateProperty.resolveWith((states) {
                       if (states.contains(WidgetState.pressed)) {
                         return selected
@@ -320,7 +314,6 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       }
                       return const Color.fromARGB(255, 238, 238, 238);
                     }),
-
                     side: selected
                         ? const BorderSide(color: Color(0xFFC5CAE9), width: 1.5)
                         : BorderSide.none,
@@ -339,9 +332,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             ),
           ),
 
-          // finish button
           SizedBox(
-
             width: double.infinity,
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -352,7 +343,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
                     child: Text(
-                      'Profil erstellen',
+                      l10n.createProfile,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
@@ -365,13 +356,40 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     );
   }
 
+  Widget _buildLangChip(String label, bool selected, VoidCallback onTap) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? primary : Colors.grey[400]!,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? onPrimary : Colors.grey[700],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildProgress(int step) {
     final active = Colors.blue[500];
     final inactive = Colors.blue[100];
 
     return Row(
       children: [
-        // step 1
         Expanded(
           child: Container(
             height: 4,
@@ -381,10 +399,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             ),
           ),
         ),
-
         const SizedBox(width: 8),
-
-        // step 2
         Expanded(
           child: Container(
             height: 4,
@@ -394,10 +409,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
             ),
           ),
         ),
-
         const SizedBox(width: 12),
-
-        // step counter
         Text('$step / 2', style: Theme.of(context).textTheme.bodySmall),
       ],
     );

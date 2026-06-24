@@ -2,22 +2,23 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:orbit/l10n/app_localizations.dart';
 import '../models/invite_model.dart';
 import '../models/join_request_model.dart';
 
-// notifications screen - shows pending circle invites and join requests
 class Notifcations extends StatelessWidget {
   const Notifcations({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Benachrichtigungen',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.notifications,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: StreamBuilder<List<QuerySnapshot>>(
@@ -27,8 +28,8 @@ class Notifcations extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return const Center(
-              child: Text('Fehler beim Laden der Benachrichtigungen.'),
+            return Center(
+              child: Text(l10n.errorLoadingNotifications),
             );
           }
 
@@ -49,7 +50,7 @@ class Notifcations extends StatelessWidget {
           if (invites.isEmpty && requests.isEmpty) {
             return Center(
               child: Text(
-                'Keine neuen Benachrichtigungen.',
+                l10n.noNotifications,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.outline,
                   fontSize: 16,
@@ -95,7 +96,6 @@ class Notifcations extends StatelessWidget {
   }
 }
 
-// single invite card with accept and decline buttons
 class _InviteCard extends StatefulWidget {
   final CircleInvite invite;
   const _InviteCard({required this.invite});
@@ -122,7 +122,6 @@ class _InviteCardState extends State<_InviteCard> {
     );
   }
 
-  // accept invite - deletes invite and adds user to circle
   Future<void> _accept() async {
     setState(() => _isLoading = true);
     try {
@@ -145,9 +144,10 @@ class _InviteCardState extends State<_InviteCard> {
       await batch.commit();
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Du bist jetzt in "${widget.invite.circleName}"!'),
+            content: Text(l10n.joinedCircle(widget.invite.circleName)),
           ),
         );
       }
@@ -155,13 +155,12 @@ class _InviteCardState extends State<_InviteCard> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Annehmen.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorAccepting)),
         );
       }
     }
   }
 
-  // decline invite - only deletes the invite document
   Future<void> _decline() async {
     setState(() => _isLoading = true);
     try {
@@ -173,7 +172,7 @@ class _InviteCardState extends State<_InviteCard> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Ablehnen.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorDeclining)),
         );
       }
     }
@@ -181,6 +180,8 @@ class _InviteCardState extends State<_InviteCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -196,7 +197,7 @@ class _InviteCardState extends State<_InviteCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Einladung zum Kreis "${widget.invite.circleName}"',
+                        l10n.inviteToCircle(widget.invite.circleName),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -204,7 +205,7 @@ class _InviteCardState extends State<_InviteCard> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Du wurdest in diesen Kreis eingeladen.',
+                        l10n.youWereInvited,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.outline,
                           fontSize: 13,
@@ -224,14 +225,14 @@ class _InviteCardState extends State<_InviteCard> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _decline,
-                      child: const Text('Ablehnen'),
+                      child: Text(l10n.decline),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: FilledButton(
                       onPressed: _accept,
-                      child: const Text('Annehmen'),
+                      child: Text(l10n.accept),
                     ),
                   ),
                 ],
@@ -243,7 +244,6 @@ class _InviteCardState extends State<_InviteCard> {
   }
 }
 
-// join request card shown to the circle admin
 class _JoinRequestCard extends StatefulWidget {
   final JoinRequest request;
   const _JoinRequestCard({required this.request});
@@ -286,11 +286,10 @@ class _JoinRequestCardState extends State<_JoinRequestCard> {
 
       await batch.commit();
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${widget.request.requestingDisplayName} wurde aufgenommen!',
-            ),
+            content: Text(l10n.memberAdded(widget.request.requestingDisplayName)),
           ),
         );
       }
@@ -298,7 +297,7 @@ class _JoinRequestCardState extends State<_JoinRequestCard> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Annehmen.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorAccepting)),
         );
       }
     }
@@ -315,7 +314,7 @@ class _JoinRequestCardState extends State<_JoinRequestCard> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler beim Ablehnen.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorDeclining)),
         );
       }
     }
@@ -323,6 +322,8 @@ class _JoinRequestCardState extends State<_JoinRequestCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -338,7 +339,7 @@ class _JoinRequestCardState extends State<_JoinRequestCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${widget.request.requestingDisplayName} möchte beitreten',
+                        l10n.wantsToJoin(widget.request.requestingDisplayName),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -346,7 +347,7 @@ class _JoinRequestCardState extends State<_JoinRequestCard> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Beitrittsanfrage für "${widget.request.circleName}"',
+                        l10n.joinRequestFor(widget.request.circleName),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.outline,
                           fontSize: 13,
@@ -366,14 +367,14 @@ class _JoinRequestCardState extends State<_JoinRequestCard> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _decline,
-                      child: const Text('Ablehnen'),
+                      child: Text(l10n.decline),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: FilledButton(
                       onPressed: _accept,
-                      child: const Text('Annehmen'),
+                      child: Text(l10n.accept),
                     ),
                   ),
                 ],
