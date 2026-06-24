@@ -458,7 +458,10 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                                     color: Theme.of(context).colorScheme.onSurface,
                                   )),
                               backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              side: BorderSide.none,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                                width: 1,
+                              ),
                             ))
                         .toList(),
                   ),
