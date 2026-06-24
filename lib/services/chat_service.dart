@@ -37,7 +37,7 @@ class ChatService {
       senderId: user.uid,
       senderName: userData['displayName'] ?? 'Unbekannt',
       text: text,
-      timestamp: DateTime.now(),
+      timestamp: DateTime.now().toUtc(),
       senderProfileImageBase64: userData['profileImageBase64'],
       senderProfileImageUrl: userData['profileImageUrl'],
       senderBadges: List<String>.from(userData['badges'] ?? []),
@@ -67,7 +67,7 @@ class ChatService {
         .doc(circleId)
         .collection('messages')
         .orderBy('timestamp', descending: true)
-        .startAfter([lastTimestamp.toIso8601String()])
+        .startAfter([lastTimestamp.toUtc().toIso8601String()])
         .limit(30)
         .get();
 
