@@ -12,6 +12,10 @@ class ChatMessage {
   final String? widgetHtml;
   final Map<String, dynamic>? widgetState;
   final String? widgetType;
+  final String? replyToId;
+  final String? replyToText;
+  final String? replyToSenderName;
+  final List<String> mentionedUids;
 
   ChatMessage({
     required this.id,
@@ -27,6 +31,10 @@ class ChatMessage {
     this.widgetHtml,
     this.widgetState,
     this.widgetType,
+    this.replyToId,
+    this.replyToText,
+    this.replyToSenderName,
+    this.mentionedUids = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -43,6 +51,10 @@ class ChatMessage {
       if (widgetHtml != null) 'widgetHtml': widgetHtml,
       if (widgetState != null) 'widgetState': widgetState,
       if (widgetType != null) 'widgetType': widgetType,
+      if (replyToId != null) 'replyToId': replyToId,
+      if (replyToText != null) 'replyToText': replyToText,
+      if (replyToSenderName != null) 'replyToSenderName': replyToSenderName,
+      if (mentionedUids.isNotEmpty) 'mentionedUids': mentionedUids,
     };
   }
 
@@ -68,6 +80,10 @@ class ChatMessage {
           ? Map<String, dynamic>.from(map['widgetState'])
           : null,
       widgetType: map['widgetType'],
+      replyToId: map['replyToId'],
+      replyToText: map['replyToText'],
+      replyToSenderName: map['replyToSenderName'],
+      mentionedUids: List<String>.from(map['mentionedUids'] ?? []),
     );
   }
 }

@@ -361,6 +361,8 @@
   "noMessages": "Noch keine Nachrichten",
   "beFirst": "Sei der Erste, der etwas schreibt!",
   "writeMessage": "Nachricht schreiben...",
+  "replyTo": "Antwort auf",
+  "cannotDeleteOthersMessages": "Du kannst nur deine eigenen Nachrichten löschen.",
 
   "settingsTitle": "Einstellungen",
   "editProfile": "Profil bearbeiten",

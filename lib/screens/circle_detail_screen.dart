@@ -315,7 +315,12 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
       ),
       body: SizedBox.expand(
         child:
-            ChatWidget(circleId: widget.circle.id, circleName: _circleName),
+            ChatWidget(
+              circleId: widget.circle.id,
+              circleName: _circleName,
+              circleCreatorId: widget.circle.createdBy,
+              circleOperators: widget.circle.operators,
+            ),
       ),
     );
   }

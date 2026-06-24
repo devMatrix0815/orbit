@@ -624,6 +624,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get writeMessage => 'Write a message...';
 
   @override
+  String get replyTo => 'Reply to';
+
+  @override
+  String get cannotDeleteOthersMessages =>
+      'You can only delete your own messages.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
