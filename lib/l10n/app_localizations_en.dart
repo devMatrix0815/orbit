@@ -262,6 +262,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterByCategory => 'Filter by category';
 
   @override
+  String get categoryBewegung => 'Movement';
+
+  @override
+  String get categoryKreativitaet => 'Creativity';
+
+  @override
+  String get categoryUnterhaltung => 'Entertainment';
+
+  @override
+  String get categoryLifestyle => 'Lifestyle';
+
+  @override
+  String get categoryWissen => 'Knowledge';
+
+  @override
+  String get categoryGesellschaft => 'Society';
+
+  @override
   String get recommendedGroups => 'Recommended Groups';
 
   @override

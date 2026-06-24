@@ -17,6 +17,7 @@ class Discover extends StatefulWidget {
 class _DiscoverState extends State<Discover> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  String? _selectedCategory;
   String? _selectedTag;
   List<Circle> _allCircles = [];
   List<String> _userInterests = [];
@@ -80,6 +81,9 @@ class _DiscoverState extends State<Discover> {
     var circles = _allCircles;
     if (_selectedTag != null) {
       circles = circles.where((c) => c.tags.contains(_selectedTag)).toList();
+    } else if (_selectedCategory != null) {
+      final categoryTags = kInterestCategories[_selectedCategory] ?? [];
+      circles = circles.where((c) => c.tags.any(categoryTags.contains)).toList();
     }
     final q = _searchQuery.toLowerCase().trim();
     if (q.isNotEmpty) {
@@ -88,10 +92,14 @@ class _DiscoverState extends State<Discover> {
     return circles;
   }
 
-  List<String> get _sortedTags {
-    final userTags = kAllInterests.where((t) => _userInterests.contains(t)).toList();
-    final otherTags = kAllInterests.where((t) => !_userInterests.contains(t)).toList();
-    return [...userTags, ...otherTags];
+  List<String> get _sortedCategories {
+    final categories = kInterestCategories.keys.toList();
+    categories.sort((a, b) {
+      final aMatch = (kInterestCategories[a] ?? []).any(_userInterests.contains) ? 0 : 1;
+      final bMatch = (kInterestCategories[b] ?? []).any(_userInterests.contains) ? 0 : 1;
+      return aMatch.compareTo(bMatch);
+    });
+    return categories;
   }
 
   void _showFilterSheet() {
@@ -137,6 +145,7 @@ class _DiscoverState extends State<Discover> {
                         onSelected: (_) {
                           setState(() {
                             _selectedTag = null;
+                            _selectedCategory = null;
                             _showAll = false;
                           });
                           Navigator.pop(ctx);
@@ -148,6 +157,7 @@ class _DiscoverState extends State<Discover> {
                         onSelected: (_) {
                           setState(() {
                             _selectedTag = tag;
+                            _selectedCategory = null;
                             _showAll = false;
                           });
                           Navigator.pop(ctx);
@@ -164,15 +174,16 @@ class _DiscoverState extends State<Discover> {
     );
   }
 
-  Widget _buildTagCircle(String tag, AppLocalizations l10n) {
-    final isSelected = _selectedTag == tag;
-    final icon = kTagIcons[tag] ?? Icons.tag;
-    final bgColor = kTagColors[tag] ?? const Color(0xFFF5F5F5);
+  Widget _buildTagCircle(String category, AppLocalizations l10n) {
+    final isSelected = _selectedCategory == category;
+    final icon = kCategoryIcons[category] ?? Icons.tag;
+    final bgColor = kCategoryColors[category] ?? const Color(0xFFF5F5F5);
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return GestureDetector(
       onTap: () => setState(() {
-        _selectedTag = isSelected ? null : tag;
+        _selectedCategory = isSelected ? null : category;
+        _selectedTag = null;
         _showAll = false;
       }),
       child: SizedBox(
@@ -197,7 +208,7 @@ class _DiscoverState extends State<Discover> {
             ),
             const SizedBox(height: 6),
             Text(
-              getInterestName(tag, l10n),
+              getCategoryName(category, l10n),
               maxLines: 2,
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
@@ -368,7 +379,7 @@ class _DiscoverState extends State<Discover> {
     final l10n = AppLocalizations.of(context)!;
     final filtered = _filteredCircles;
     final displayed = _showAll ? filtered : filtered.take(4).toList();
-    final sortedTags = _sortedTags;
+    final sortedCategories = _sortedCategories;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
@@ -443,10 +454,10 @@ class _DiscoverState extends State<Discover> {
                       height: 108,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: sortedTags.length,
+                        itemCount: sortedCategories.length,
                         separatorBuilder: (_, _) => const SizedBox(width: 6),
                         itemBuilder: (_, i) =>
-                            _buildTagCircle(sortedTags[i], l10n),
+                            _buildTagCircle(sortedCategories[i], l10n),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -454,7 +465,9 @@ class _DiscoverState extends State<Discover> {
                     Text(
                       _selectedTag != null
                           ? getInterestName(_selectedTag!, l10n)
-                          : l10n.recommendedGroups,
+                          : _selectedCategory != null
+                              ? getCategoryName(_selectedCategory!, l10n)
+                              : l10n.recommendedGroups,
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.bold),
                     ),
