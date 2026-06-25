@@ -10,6 +10,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/setup_profile_screen.dart';
+import 'services/notification_service.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 final ValueNotifier<Locale> localeNotifier = ValueNotifier(const Locale('de'));
@@ -36,6 +37,40 @@ void main() async {
     badge: true,
     sound: true,
   );
+
+  try {
+    await NotificationService.init();
+  } catch (_) {}
+
+  FirebaseAuth.instance.authStateChanges().listen((user) async {
+    try {
+      if (user != null) {
+        try {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .set({'fcmToken': fcmToken}, SetOptions(merge: true));
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+  });
+
+  // FCM Token automatisch updaten wenn er sich ändert
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set({'fcmToken': newToken}, SetOptions(merge: true));
+    }
+  });
+
+  // Benachrichtigung anzeigen wenn App vorne ist
+  FirebaseMessaging.onMessage.listen(NotificationService.handleForegroundMessage);
 
   runApp(const MyApp());
 }

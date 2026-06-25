@@ -239,6 +239,8 @@ class _ChatWidgetState extends State<ChatWidget> {
         replyToId: reply?.id,
         replyToText: reply?.text,
         replyToSenderName: reply?.senderName,
+        replyToSenderId: reply?.senderId,
+        circleName: widget.circleName,
         mentionedUids: mentionedUids,
       );
       _messageController.clear();

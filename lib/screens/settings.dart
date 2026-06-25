@@ -10,6 +10,7 @@ import 'package:orbit/services/update_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:orbit/main.dart' show themeNotifier, localeNotifier;
 import 'package:orbit/l10n/app_localizations.dart';
+import 'package:orbit/services/notification_service.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -24,6 +25,7 @@ class _SettingsState extends State<Settings> {
   String _currentVersion = '';
   bool _isDarkMode = false;
   String _currentLocale = 'de';
+  bool _notificationsEnabled = true;
 
   @override
   void initState() {
@@ -33,6 +35,18 @@ class _SettingsState extends State<Settings> {
     UpdateService.currentVersion().then((v) {
       if (mounted) setState(() => _currentVersion = v);
     });
+    SharedPreferences.getInstance().then((prefs) {
+      if (mounted) {
+        setState(() {
+          _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+        });
+      }
+    });
+  }
+
+  Future<void> _toggleNotifications(bool enabled) async {
+    await NotificationService.setEnabled(enabled);
+    setState(() => _notificationsEnabled = enabled);
   }
 
   Future<void> _toggleTheme(bool isDark) async {
@@ -297,6 +311,34 @@ class _SettingsState extends State<Settings> {
                     Switch(
                       value: _isDarkMode,
                       onChanged: _toggleTheme,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // push notifications toggle
+            Card(
+              clipBehavior: Clip.hardEdge,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 6.0,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.notifications_outlined,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(_currentLocale == 'en' ? 'Push notifications' : 'Push-Benachrichtigungen')),
+                    Switch(
+                      value: _notificationsEnabled,
+                      onChanged: _toggleNotifications,
                     ),
                   ],
                 ),
