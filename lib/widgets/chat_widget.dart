@@ -121,6 +121,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                 partial.isEmpty ||
                 m.name.toLowerCase().startsWith(partial.toLowerCase()))
             .toList();
+        if ('everyone'.startsWith(partial.toLowerCase())) {
+          filtered.insert(0, _MemberInfo('__everyone__', 'everyone'));
+        }
         if (filtered.isNotEmpty) {
           setState(() {
             _showMentionSuggestions = true;
@@ -224,11 +227,18 @@ class _ChatWidgetState extends State<ChatWidget> {
     final reply = _replyMessage;
 
     final mentionedUids = <String>[];
-    for (final member in _members) {
-      if (RegExp(
-        '@${RegExp.escape(member.name)}(?:\\s|\$)',
-      ).hasMatch(text)) {
-        mentionedUids.add(member.uid);
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (RegExp(r'@everyone(?:\s|$)', caseSensitive: false).hasMatch(text)) {
+      for (final member in _members) {
+        if (member.uid != currentUid) mentionedUids.add(member.uid);
+      }
+    } else {
+      for (final member in _members) {
+        if (RegExp(
+          '@${RegExp.escape(member.name)}(?:\\s|\$)',
+        ).hasMatch(text)) {
+          mentionedUids.add(member.uid);
+        }
       }
     }
 
@@ -411,10 +421,12 @@ class _ChatWidgetState extends State<ChatWidget> {
   }
 
   Widget _buildMentionSuggestions() {
-    return Container(
+    return Material(
+      elevation: 4,
+      color: Theme.of(context).colorScheme.surface,
+      child: Container(
       constraints: const BoxConstraints(maxHeight: 180),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
             color: Theme.of(context)
@@ -423,13 +435,6 @@ class _ChatWidgetState extends State<ChatWidget> {
                 .withValues(alpha: 0.2),
           ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 6,
-            offset: const Offset(0, -2),
-          ),
-        ],
       ),
       child: ListView.builder(
         shrinkWrap: true,
@@ -461,6 +466,7 @@ class _ChatWidgetState extends State<ChatWidget> {
             onTap: () => _insertMention(m),
           );
         },
+      ),
       ),
     );
   }
