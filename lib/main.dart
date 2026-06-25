@@ -46,12 +46,14 @@ void main() async {
     try {
       if (user != null) {
         try {
+          final prefs = await SharedPreferences.getInstance();
           final fcmToken = await FirebaseMessaging.instance.getToken();
           if (fcmToken != null) {
+            final locale = prefs.getString('locale') ?? 'de';
             await FirebaseFirestore.instance
                 .collection('users')
                 .doc(user.uid)
-                .set({'fcmToken': fcmToken}, SetOptions(merge: true));
+                .set({'fcmToken': fcmToken, 'notifLocale': locale}, SetOptions(merge: true));
           }
         } catch (_) {}
       }

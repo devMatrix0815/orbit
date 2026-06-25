@@ -61,6 +61,15 @@ class _SettingsState extends State<Settings> {
     await prefs.setString('locale', langCode);
     localeNotifier.value = Locale(langCode);
     setState(() => _currentLocale = langCode);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({'notifLocale': langCode}, SetOptions(merge: true));
+      }
+    } catch (_) {}
   }
 
   Future<void> _editProfile(BuildContext context) async {
