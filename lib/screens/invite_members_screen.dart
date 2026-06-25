@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,6 +7,8 @@ import 'package:orbit/l10n/app_localizations.dart';
 import '../models/invite_model.dart';
 import '../widgets/user_badges.dart';
 import 'user_profile_screen.dart';
+
+const _kVercelNotifyUrl = 'https://orbit-notification.vercel.app/api/notify';
 
 class InviteMembersScreen extends StatefulWidget {
   final String circleId;
@@ -148,6 +151,26 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
         if (widget.circleImageUrl != null)
           'circleImageUrl': widget.circleImageUrl,
       });
+
+      // Push notification to invited user
+      try {
+        final user = FirebaseAuth.instance.currentUser!;
+        final idToken = await user.getIdToken();
+        final senderDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUid)
+            .get();
+        final senderName =
+            senderDoc.data()?['displayName'] as String? ?? '';
+        await Dio().post(_kVercelNotifyUrl, data: {
+          'recipients': [
+            {'uid': targetUid, 'type': 'invite'}
+          ],
+          'senderName': senderName,
+          'circleName': widget.circleName,
+          'idToken': idToken,
+        });
+      } catch (_) {}
 
       _nameController.clear();
       setState(() => _foundUser = null);
