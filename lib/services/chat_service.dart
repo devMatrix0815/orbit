@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat_message_model.dart';
+
+// Nach dem Vercel-Deployment hier deine URL eintragen:
+const _kVercelNotifyUrl = 'https://orbit-notification.vercel.app/api/notify';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -28,6 +32,8 @@ class ChatService {
     String? replyToId,
     String? replyToText,
     String? replyToSenderName,
+    String? replyToSenderId,
+    String circleName = '',
     List<String> mentionedUids = const [],
   }) async {
     final user = _auth.currentUser;
@@ -49,6 +55,7 @@ class ChatService {
       replyToId: replyToId,
       replyToText: replyToText,
       replyToSenderName: replyToSenderName,
+      replyToSenderId: replyToSenderId,
       mentionedUids: mentionedUids,
     );
 
@@ -75,6 +82,35 @@ class ChatService {
       'lastMessageTimestamp': FieldValue.serverTimestamp(),
       'lastMessageSender': userData['displayName'] ?? 'Unbekannt',
     });
+
+    // Write push notifications for mentions and replies
+    final notifTargets = <String, String>{};
+    for (final uid in mentionedUids) {
+      if (uid != user.uid) notifTargets[uid] = 'mention';
+    }
+    if (replyToSenderId != null &&
+        replyToSenderId != user.uid &&
+        !notifTargets.containsKey(replyToSenderId)) {
+      notifTargets[replyToSenderId] = 'reply';
+    }
+
+    if (notifTargets.isNotEmpty) {
+      final fromName = userData['displayName'] as String? ?? '';
+      try {
+        final idToken = await user.getIdToken();
+        await Dio().post(
+          _kVercelNotifyUrl,
+          data: {
+            'recipients': notifTargets.entries
+                .map((e) => {'uid': e.key, 'type': e.value})
+                .toList(),
+            'senderName': fromName,
+            'circleName': circleName,
+            'idToken': idToken,
+          },
+        );
+      } catch (_) {}
+    }
   }
 
   Future<void> markMentionsSeen(String circleId) async {

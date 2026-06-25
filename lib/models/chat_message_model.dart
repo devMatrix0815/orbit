@@ -15,6 +15,7 @@ class ChatMessage {
   final String? replyToId;
   final String? replyToText;
   final String? replyToSenderName;
+  final String? replyToSenderId;
   final List<String> mentionedUids;
 
   ChatMessage({
@@ -34,6 +35,7 @@ class ChatMessage {
     this.replyToId,
     this.replyToText,
     this.replyToSenderName,
+    this.replyToSenderId,
     this.mentionedUids = const [],
   });
 
@@ -54,6 +56,7 @@ class ChatMessage {
       if (replyToId != null) 'replyToId': replyToId,
       if (replyToText != null) 'replyToText': replyToText,
       if (replyToSenderName != null) 'replyToSenderName': replyToSenderName,
+      if (replyToSenderId != null) 'replyToSenderId': replyToSenderId,
       if (mentionedUids.isNotEmpty) 'mentionedUids': mentionedUids,
     };
   }
@@ -83,6 +86,7 @@ class ChatMessage {
       replyToId: map['replyToId'],
       replyToText: map['replyToText'],
       replyToSenderName: map['replyToSenderName'],
+      replyToSenderId: map['replyToSenderId'],
       mentionedUids: List<String>.from(map['mentionedUids'] ?? []),
     );
   }
