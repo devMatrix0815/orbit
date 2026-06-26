@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_links/app_links.dart';
 
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
@@ -14,6 +15,9 @@ import 'services/notification_service.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 final ValueNotifier<Locale> localeNotifier = ValueNotifier(const Locale('de'));
+
+// Circle ID from a deep link that is waiting to be opened in MainScreen
+final ValueNotifier<String?> pendingInviteCircleId = ValueNotifier(null);
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
@@ -41,6 +45,24 @@ void main() async {
   try {
     await NotificationService.init();
   } catch (_) {}
+
+  // Handle deep links (orbit://join?circle=CIRCLE_ID)
+  final appLinks = AppLinks();
+  try {
+    final initialUri = await appLinks.getInitialLink();
+    if (initialUri != null &&
+        initialUri.scheme == 'orbit' &&
+        initialUri.host == 'join') {
+      final id = initialUri.queryParameters['circle'];
+      if (id != null && id.isNotEmpty) pendingInviteCircleId.value = id;
+    }
+  } catch (_) {}
+  appLinks.uriLinkStream.listen((uri) {
+    if (uri.scheme == 'orbit' && uri.host == 'join') {
+      final id = uri.queryParameters['circle'];
+      if (id != null && id.isNotEmpty) pendingInviteCircleId.value = id;
+    }
+  });
 
   FirebaseAuth.instance.authStateChanges().listen((user) async {
     try {

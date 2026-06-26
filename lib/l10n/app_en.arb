@@ -419,5 +419,14 @@
   "interestPhilosophie": "Philosophy",
   "interestFamilie": "Family",
   "interestEhrenamt": "Volunteering",
-  "interestErnaehrung": "Nutrition"
+  "interestErnaehrung": "Nutrition",
+
+  "inviteLink": "Invite Link",
+  "inviteLinkHint": "Anyone with this link can join the circle or install Orbit.",
+  "copyLink": "Copy link",
+  "linkCopied": "Link copied!",
+
+  "qrCode": "QR Code",
+  "qrLongPressHint": "Long press to share",
+  "qrShared": "QR code shared!"
 }

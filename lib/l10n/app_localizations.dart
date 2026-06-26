@@ -1519,6 +1519,48 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Ernährung'**
   String get interestErnaehrung;
+
+  /// No description provided for @inviteLink.
+  ///
+  /// In de, this message translates to:
+  /// **'Einlade-Link'**
+  String get inviteLink;
+
+  /// No description provided for @inviteLinkHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Jeder mit diesem Link kann den Kreis beitreten oder Orbit installieren.'**
+  String get inviteLinkHint;
+
+  /// No description provided for @copyLink.
+  ///
+  /// In de, this message translates to:
+  /// **'Link kopieren'**
+  String get copyLink;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In de, this message translates to:
+  /// **'Link kopiert!'**
+  String get linkCopied;
+
+  /// No description provided for @qrCode.
+  ///
+  /// In de, this message translates to:
+  /// **'QR-Code'**
+  String get qrCode;
+
+  /// No description provided for @qrLongPressHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Lange drücken zum Teilen'**
+  String get qrLongPressHint;
+
+  /// No description provided for @qrShared.
+  ///
+  /// In de, this message translates to:
+  /// **'QR-Code geteilt!'**
+  String get qrShared;
 }
 
 class _AppLocalizationsDelegate
