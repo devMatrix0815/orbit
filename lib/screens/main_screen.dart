@@ -5,6 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import '../main.dart' show pendingInviteCircleId;
+import '../models/circle_model.dart';
+import 'circle_detail_screen.dart';
 import 'my_circles.dart';
 import 'discover.dart';
 import 'notifcations.dart';
@@ -32,6 +35,33 @@ class _MainScreenState extends State<MainScreen> {
     _saveFcmToken();
     _ensureDisplayNameLower();
     _listenNotifications();
+    pendingInviteCircleId.addListener(_handleDeepLink);
+    // Check if a link arrived before MainScreen was ready
+    if (pendingInviteCircleId.value != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handleDeepLink());
+    }
+  }
+
+  void _handleDeepLink() {
+    final circleId = pendingInviteCircleId.value;
+    if (circleId == null || !mounted) return;
+    pendingInviteCircleId.value = null;
+    _openCircleById(circleId);
+  }
+
+  Future<void> _openCircleById(String circleId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('circles')
+          .doc(circleId)
+          .get();
+      if (!doc.exists || !mounted) return;
+      final circle = Circle.fromFirestore(doc);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => CircleDetailScreen(circle: circle)),
+      );
+    } catch (_) {}
   }
 
   void _listenNotifications() {
@@ -59,6 +89,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void dispose() {
+    pendingInviteCircleId.removeListener(_handleDeepLink);
     _inviteSub?.cancel();
     _requestSub?.cancel();
     super.dispose();

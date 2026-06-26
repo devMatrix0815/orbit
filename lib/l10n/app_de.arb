@@ -419,5 +419,14 @@
   "interestPhilosophie": "Philosophie",
   "interestFamilie": "Familie",
   "interestEhrenamt": "Ehrenamt",
-  "interestErnaehrung": "Ernährung"
+  "interestErnaehrung": "Ernährung",
+
+  "inviteLink": "Einlade-Link",
+  "inviteLinkHint": "Jeder mit diesem Link kann den Kreis beitreten oder Orbit installieren.",
+  "copyLink": "Link kopieren",
+  "linkCopied": "Link kopiert!",
+
+  "qrCode": "QR-Code",
+  "qrLongPressHint": "Lange drücken zum Teilen",
+  "qrShared": "QR-Code geteilt!"
 }

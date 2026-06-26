@@ -781,4 +781,26 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get interestErnaehrung => 'Ernährung';
+
+  @override
+  String get inviteLink => 'Einlade-Link';
+
+  @override
+  String get inviteLinkHint =>
+      'Jeder mit diesem Link kann den Kreis beitreten oder Orbit installieren.';
+
+  @override
+  String get copyLink => 'Link kopieren';
+
+  @override
+  String get linkCopied => 'Link kopiert!';
+
+  @override
+  String get qrCode => 'QR-Code';
+
+  @override
+  String get qrLongPressHint => 'Lange drücken zum Teilen';
+
+  @override
+  String get qrShared => 'QR-Code geteilt!';
 }

@@ -1,12 +1,21 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:orbit/l10n/app_localizations.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/invite_model.dart';
 import '../widgets/user_badges.dart';
 import 'user_profile_screen.dart';
+
+const _kJoinBaseUrl = 'https://orbit-download.vercel.app/join';
 
 const _kVercelNotifyUrl = 'https://orbit-notification.vercel.app/api/notify';
 
@@ -238,6 +247,98 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
     }
   }
 
+  String get _inviteLink =>
+      '$_kJoinBaseUrl?circle=${widget.circleId}&name=${Uri.encodeComponent(widget.circleName)}';
+
+  Future<void> _copyInviteLink() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    await Clipboard.setData(ClipboardData(text: _inviteLink));
+    if (!mounted) return;
+    messenger.showSnackBar(SnackBar(content: Text(l10n.linkCopied)));
+  }
+
+  void _showQrBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _QrSheet(
+        link: _inviteLink,
+        circleName: widget.circleName,
+      ),
+    );
+  }
+
+  Widget _buildInviteLinkCard(AppLocalizations l10n) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.link, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.inviteLink,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.inviteLinkHint,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _copyInviteLink,
+                    icon: const Icon(Icons.copy, size: 16),
+                    label: Text(l10n.copyLink),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 40),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 40,
+                  width: 40,
+                  child: OutlinedButton(
+                    onPressed: _showQrBottomSheet,
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Icon(Icons.qr_code_2, size: 20),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -249,6 +350,7 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildInviteLinkCard(l10n),
             Row(
               children: [
                 Expanded(
@@ -395,6 +497,151 @@ class _InviteMembersScreenState extends State<InviteMembersScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── QR Code Bottom Sheet ──────────────────────────────────────────────────────
+
+class _QrSheet extends StatefulWidget {
+  final String link;
+  final String circleName;
+
+  const _QrSheet({required this.link, required this.circleName});
+
+  @override
+  State<_QrSheet> createState() => _QrSheetState();
+}
+
+class _QrSheetState extends State<_QrSheet> {
+  final _qrKey = GlobalKey();
+  bool _sharing = false;
+
+  Future<void> _shareAsImage() async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    try {
+      final boundary =
+          _qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final bytes = byteData!.buffer.asUint8List();
+
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/orbit_qr.png');
+      await file.writeAsBytes(bytes);
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png')],
+        subject: 'Orbit – ${widget.circleName}',
+      );
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final qrFg = isDark ? Colors.white : Colors.black;
+    final qrBg = isDark ? Colors.black : Colors.white;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // handle bar
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            l10n.qrCode,
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            widget.circleName,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 20),
+
+          // QR code – wrapped in RepaintBoundary for image capture
+          GestureDetector(
+            onLongPress: _shareAsImage,
+            child: RepaintBoundary(
+              key: _qrKey,
+              child: Container(
+                color: qrBg,
+                padding: const EdgeInsets.all(12),
+                child: QrImageView(
+                  data: widget.link,
+                  version: QrVersions.auto,
+                  size: 220,
+                  errorCorrectionLevel: QrErrorCorrectLevel.H,
+                  eyeStyle: QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: qrFg,
+                  ),
+                  dataModuleStyle: QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: qrFg,
+                  ),
+                  backgroundColor: qrBg,
+                  embeddedImage: const AssetImage('assets/icon.png'),
+                  embeddedImageStyle: const QrEmbeddedImageStyle(
+                    size: Size(40, 40),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+          Text(
+            l10n.qrLongPressHint,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 20),
+
+          // Share button
+          FilledButton.icon(
+            onPressed: _sharing ? null : _shareAsImage,
+            icon: _sharing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.share, size: 18),
+            label: Text(l10n.qrShared.replaceFirst('!', '')),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
