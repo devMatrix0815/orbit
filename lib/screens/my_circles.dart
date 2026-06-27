@@ -8,7 +8,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:orbit/l10n/app_localizations.dart';
 import '../models/circle_model.dart';
 import '../constants/interests.dart';
+import '../services/story_service.dart';
 import 'circle_detail_screen.dart';
+import 'story_viewer_screen.dart';
 
 class MyCircles extends StatefulWidget {
   const MyCircles({super.key});
@@ -22,19 +24,21 @@ class _TopCircleAvatar extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onLongPress;
   final bool hasMention;
+  // Pre-built story indicator widget placed at top-left; null = no story
+  final Widget? storyIndicator;
 
   const _TopCircleAvatar({
     required this.circle,
     required this.onTap,
     required this.onLongPress,
     this.hasMention = false,
+    this.storyIndicator,
   });
 
   @override
   Widget build(BuildContext context) {
-    final imageBytes = circle.imageBase64 != null
-        ? base64Decode(circle.imageBase64!)
-        : null;
+    final imageBytes =
+        circle.imageBase64 != null ? base64Decode(circle.imageBase64!) : null;
 
     return GestureDetector(
       onTap: onTap,
@@ -45,6 +49,7 @@ class _TopCircleAvatar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
+              clipBehavior: Clip.none,
               children: [
                 Container(
                   width: 56,
@@ -52,10 +57,8 @@ class _TopCircleAvatar extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: hasMention
-                          ? Colors.red
-                          : const Color(0xFFC5CAE9),
-                      width: hasMention ? 2.5 : 2.5,
+                      color: hasMention ? Colors.red : const Color(0xFFC5CAE9),
+                      width: 2.5,
                     ),
                   ),
                   child: ClipOval(
@@ -85,15 +88,16 @@ class _TopCircleAvatar extends StatelessWidget {
                       width: 18,
                       height: 18,
                       decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.alternate_email,
-                        color: Colors.white,
-                        size: 11,
-                      ),
+                          color: Colors.red, shape: BoxShape.circle),
+                      child: const Icon(Icons.alternate_email,
+                          color: Colors.white, size: 11),
                     ),
+                  ),
+                if (storyIndicator != null)
+                  Positioned(
+                    top: -4,
+                    left: -4,
+                    child: storyIndicator!,
                   ),
               ],
             ),
@@ -121,12 +125,193 @@ class _MyCirclesState extends State<MyCircles> {
   String _searchQuery = '';
   Set<String> _circlesWithMentions = {};
   StreamSubscription<DocumentSnapshot>? _mentionSub;
+  Set<String> _circlesWithStories = {};
+  // circleId → top-3 creators sorted: unseen first, newest first
+  // each entry: {'image': String?, 'name': String, 'seen': bool, 'at': DateTime}
+  Map<String, List<Map<String, dynamic>>> _circleStoryCreators = {};
+  StreamSubscription<QuerySnapshot>? _storySub;
 
   @override
   void initState() {
     super.initState();
     _loadCircles();
     _listenForMentions();
+  }
+
+  void _listenForStories() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    _storySub?.cancel();
+
+    if (uid == null || _circles.isEmpty) {
+      setState(() {
+        _circlesWithStories = {};
+        _circleStoryCreators = {};
+      });
+      return;
+    }
+
+    final ids = _circles.map((c) => c.id).toList();
+    // Firestore whereIn limit is 30; most users have far fewer circles
+    final queryIds = ids.length <= 30 ? ids : ids.sublist(0, 30);
+
+    _storySub = FirebaseFirestore.instance
+        .collection('stories')
+        .where('circleId', whereIn: queryIds)
+        .snapshots()
+        .listen((snap) {
+      if (!mounted) return;
+      final now = DateTime.now();
+      final withStories = <String>{};
+      // circleId → all active stories as raw maps
+      final raw = <String, List<Map<String, dynamic>>>{};
+
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
+        if (expiresAt == null || expiresAt.isBefore(now)) continue;
+        final circleId = data['circleId'] as String;
+        withStories.add(circleId);
+        final viewedBy = List<String>.from(data['viewedBy'] ?? []);
+        final seen = viewedBy.contains(uid);
+        final createdAt =
+            (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime(0);
+        raw.putIfAbsent(circleId, () => []).add({
+          'image': data['creatorImageBase64'] as String?,
+          'name': data['creatorName'] as String? ?? '',
+          'seen': seen,
+          'at': createdAt,
+        });
+      }
+
+      // Sort each circle: unseen first, then seen; newest first within group
+      final creators = <String, List<Map<String, dynamic>>>{};
+      for (final entry in raw.entries) {
+        final list = entry.value
+          ..sort((a, b) {
+            final aSeen = a['seen'] as bool;
+            final bSeen = b['seen'] as bool;
+            if (aSeen != bSeen) return aSeen ? 1 : -1;
+            return (b['at'] as DateTime).compareTo(a['at'] as DateTime);
+          });
+        creators[entry.key] = list.take(3).toList();
+      }
+
+      setState(() {
+        _circlesWithStories = withStories;
+        _circleStoryCreators = creators;
+      });
+    });
+  }
+
+  Future<void> _openStoryViewer(Circle circle) async {
+    final allStories = await StoryService.getActiveStoriesForCircle(circle.id);
+    if (!mounted) return;
+    if (allStories.isEmpty) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CircleDetailScreen(circle: circle),
+        ),
+      );
+      _loadCircles();
+      return;
+    }
+    // Unseen stories first (newest first within group), then seen
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final unseen = allStories
+        .where((s) => !s.viewedBy.contains(uid))
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final seen = allStories
+        .where((s) => s.viewedBy.contains(uid))
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StoryViewerScreen(
+          circleName: circle.name,
+          stories: [...unseen, ...seen],
+        ),
+      ),
+    );
+  }
+
+  // Builds a stack of up to 3 overlapping creator avatar circles.
+  // Unseen = gradient ring, seen = grey. Newest/unseen is topmost (rightmost).
+  Widget _buildStoryIndicator(
+    String circleId, {
+    required double size,
+    required double offset,
+    required VoidCallback onTap,
+  }) {
+    final creators = _circleStoryCreators[circleId] ?? [];
+    if (creators.isEmpty) return const SizedBox.shrink();
+    final n = creators.length.clamp(1, 3);
+    final totalWidth = size + (n - 1) * offset;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: SizedBox(
+        width: totalWidth,
+        height: size + 4,
+        child: Stack(
+          children: List.generate(n, (renderOrder) {
+            // renderOrder 0 = leftmost/oldest (rendered first = bottom z)
+            // renderOrder n-1 = rightmost/newest (rendered last = top z)
+            final creatorIdx = n - 1 - renderOrder;
+            final creator = creators[creatorIdx];
+            final left = renderOrder * offset;
+            final seen = creator['seen'] as bool? ?? false;
+            final imageB64 = creator['image'] as String?;
+            final name = creator['name'] as String? ?? '';
+
+            return Positioned(
+              left: left,
+              top: 2,
+              child: Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: !seen
+                      ? const LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: [Color(0xFFFF9966), Color(0xFFE91E8C)],
+                        )
+                      : LinearGradient(colors: [
+                          Colors.grey.shade500,
+                          Colors.grey.shade500,
+                        ]),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                child: ClipOval(
+                  child: imageB64 != null
+                      ? Image.memory(base64Decode(imageB64), fit: BoxFit.cover)
+                      : Container(
+                          color: !seen
+                              ? const Color(0xFFFF9966)
+                              : Colors.grey.shade500,
+                          alignment: Alignment.center,
+                          child: Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : '?',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: size * 0.38,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
   }
 
   void _listenForMentions() {
@@ -150,6 +335,7 @@ class _MyCirclesState extends State<MyCircles> {
   @override
   void dispose() {
     _mentionSub?.cancel();
+    _storySub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -492,6 +678,7 @@ class _MyCirclesState extends State<MyCircles> {
         _pinnedIds = pinned;
         _isLoading = false;
       });
+      _listenForStories();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -525,6 +712,7 @@ class _MyCirclesState extends State<MyCircles> {
         ? base64Decode(circle.imageBase64!)
         : null;
     final isPinned = _pinnedIds.contains(circle.id);
+    final hasStory = _circlesWithStories.contains(circle.id);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
@@ -648,6 +836,18 @@ class _MyCirclesState extends State<MyCircles> {
                       ),
                     ),
                   ),
+                // Story stack: top-right, up to 3 stacked creator avatars
+                if (hasStory)
+                  Positioned(
+                    top: 10,
+                    right: isPinned ? 38 : 12,
+                    child: _buildStoryIndicator(
+                      circle.id,
+                      size: 36,
+                      offset: 18,
+                      onTap: () => _openStoryViewer(circle),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -678,6 +878,14 @@ class _MyCirclesState extends State<MyCircles> {
             itemBuilder: (_, i) => _TopCircleAvatar(
               circle: pinned[i],
               hasMention: _circlesWithMentions.contains(pinned[i].id),
+              storyIndicator: _circlesWithStories.contains(pinned[i].id)
+                  ? _buildStoryIndicator(
+                      pinned[i].id,
+                      size: 18,
+                      offset: 9,
+                      onTap: () => _openStoryViewer(pinned[i]),
+                    )
+                  : null,
               onTap: () async {
                 await Navigator.push(
                   context,

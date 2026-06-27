@@ -10,6 +10,7 @@ import '../widgets/chat_widget.dart';
 import 'circle_settings_screen.dart';
 import 'user_profile_screen.dart';
 import '../widgets/user_badges.dart';
+import 'story_creator_screen.dart';
 
 class CircleDetailScreen extends StatefulWidget {
   final Circle circle;
@@ -248,6 +249,16 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
               switch (value) {
+                case 'story':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => StoryCreatorScreen(
+                        circleId: widget.circle.id,
+                        circleName: _circleName,
+                      ),
+                    ),
+                  );
                 case 'members':
                   _showMembersSheet();
                 case 'invites':
@@ -262,6 +273,14 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
               final l = AppLocalizations.of(context)!;
               return isCreator
                   ? [
+                      PopupMenuItem(
+                        value: 'story',
+                        child: ListTile(
+                          leading: const Icon(Icons.auto_stories_outlined),
+                          title: Text(l.storyPost),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
                       PopupMenuItem(
                         value: 'members',
                         child: ListTile(
@@ -288,6 +307,14 @@ class _CircleDetailScreenState extends State<CircleDetailScreen> {
                       ),
                     ]
                   : [
+                      PopupMenuItem(
+                        value: 'story',
+                        child: ListTile(
+                          leading: const Icon(Icons.auto_stories_outlined),
+                          title: Text(l.storyPost),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
                       PopupMenuItem(
                         value: 'members',
                         child: ListTile(
