@@ -1561,6 +1561,60 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'QR-Code geteilt!'**
   String get qrShared;
+
+  /// No description provided for @storyPost.
+  ///
+  /// In de, this message translates to:
+  /// **'Story posten'**
+  String get storyPost;
+
+  /// No description provided for @addText.
+  ///
+  /// In de, this message translates to:
+  /// **'Text hinzufügen'**
+  String get addText;
+
+  /// No description provided for @textHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Text eingeben...'**
+  String get textHint;
+
+  /// No description provided for @add.
+  ///
+  /// In de, this message translates to:
+  /// **'Hinzufügen'**
+  String get add;
+
+  /// No description provided for @storyPostedSuccess.
+  ///
+  /// In de, this message translates to:
+  /// **'Story gepostet!'**
+  String get storyPostedSuccess;
+
+  /// No description provided for @storyPostError.
+  ///
+  /// In de, this message translates to:
+  /// **'Fehler beim Posten der Story.'**
+  String get storyPostError;
+
+  /// No description provided for @storyLongPressHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Lang drücken zum Löschen'**
+  String get storyLongPressHint;
+
+  /// No description provided for @storyMinutesAgo.
+  ///
+  /// In de, this message translates to:
+  /// **'vor {minutes} Min.'**
+  String storyMinutesAgo(int minutes);
+
+  /// No description provided for @storyHoursAgo.
+  ///
+  /// In de, this message translates to:
+  /// **'vor {hours} Std.'**
+  String storyHoursAgo(int hours);
 }
 
 class _AppLocalizationsDelegate

@@ -798,4 +798,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrShared => 'QR code shared!';
+
+  @override
+  String get storyPost => 'Post Story';
+
+  @override
+  String get addText => 'Add text';
+
+  @override
+  String get textHint => 'Enter text...';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get storyPostedSuccess => 'Story posted!';
+
+  @override
+  String get storyPostError => 'Error posting story.';
+
+  @override
+  String get storyLongPressHint => 'Long press to delete';
+
+  @override
+  String storyMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String storyHoursAgo(int hours) {
+    return '${hours}h ago';
+  }
 }

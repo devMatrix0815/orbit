@@ -803,4 +803,35 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get qrShared => 'QR-Code geteilt!';
+
+  @override
+  String get storyPost => 'Story posten';
+
+  @override
+  String get addText => 'Text hinzufügen';
+
+  @override
+  String get textHint => 'Text eingeben...';
+
+  @override
+  String get add => 'Hinzufügen';
+
+  @override
+  String get storyPostedSuccess => 'Story gepostet!';
+
+  @override
+  String get storyPostError => 'Fehler beim Posten der Story.';
+
+  @override
+  String get storyLongPressHint => 'Lang drücken zum Löschen';
+
+  @override
+  String storyMinutesAgo(int minutes) {
+    return 'vor $minutes Min.';
+  }
+
+  @override
+  String storyHoursAgo(int hours) {
+    return 'vor $hours Std.';
+  }
 }

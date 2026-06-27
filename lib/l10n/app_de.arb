@@ -428,5 +428,27 @@
 
   "qrCode": "QR-Code",
   "qrLongPressHint": "Lange drücken zum Teilen",
-  "qrShared": "QR-Code geteilt!"
+  "qrShared": "QR-Code geteilt!",
+
+  "storyPost": "Story posten",
+  "addText": "Text hinzufügen",
+  "textHint": "Text eingeben...",
+  "add": "Hinzufügen",
+  "storyPostedSuccess": "Story gepostet!",
+  "storyPostError": "Fehler beim Posten der Story.",
+  "storyLongPressHint": "Lang drücken zum Löschen",
+
+  "storyMinutesAgo": "vor {minutes} Min.",
+  "@storyMinutesAgo": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+
+  "storyHoursAgo": "vor {hours} Std.",
+  "@storyHoursAgo": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  }
 }
